@@ -1,0 +1,57 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{longtable}
+\usepackage{array}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue}
+
+% Listing setting for code appendix
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{orange},
+    frame=single,
+    breaklines=true,
+    backgroundcolor=\color{gray!5}
+}
+
+\title{\textbf{\LARGE [论文主标题：基于...的数学建模与决策优化]}}
+\author{参赛队：数学建模多智能体协同系统}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+[此处由各章节摘要汇聚，全面概括四问的数学解法、核心定理、创新机制与最终经济/工程结论。]
+
+\textbf{关键词}：关键词1；关键词2；关键词3；关键词4；关键词5
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+% 模块化分章节总装 (Partitioned Chapters)
+\input{sections/01_intro_eda.tex}
+\input{sections/02_problem1_milp.tex}
+\input{sections/03_problem2_cvar.tex}
+\input{sections/04_problem3_corr.tex}
+\input{sections/05_sensitivity_app.tex}
+
+\end{document}
