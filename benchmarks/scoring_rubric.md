@@ -14,13 +14,16 @@
 
 | 检查项 ID | 满分 | 得分规则 |
 |---|---|---|
-| `deliverables` | **15** | `.modeling/artifacts/submissions/` 非空（0 分则整项 0）；抽查**所有** `.xlsx` sheet，若存在任意空单元格即按空占比扣分（满分 15 = 齐备 + 全满）。`checks_config.json` 的 `expected_deliverables` 若声明了文件名列表，则逐一核对存在性（缺一个扣 15/len）。 |
-| `traceability` | **10** | 论文正文（优先 `paper.pdf`，读不了则退而查 `manuscript/sections/*.tex`）中抽取数值，抽查前 20 个是否都能在 `artifacts/02_execution_log.json` 字符串化 JSON 中精确匹配到。得分 = `10 × found / checked`。 |
-| `compile` | **5** | `manuscript/paper.pdf` 存在且页数 ≥ 20 得 5 分；10–19 页得 2.5 分；< 10 页或不存在得 0 分。 |
-| `compliance` | **10** | 拆 4 项：无身份泄露词（`参赛队`/`队员`/20 所头部高校名）3 分；无 `\tableofcontents` 目录页 3 分；存在 `AI_Tool_Disclosure.md`（或 `AI声明` 类似命名）4 分。 |
+| `deliverables` | **12** | `.modeling/artifacts/submissions/` 非空（齐备 4 分）；抽查**所有** `.xlsx` sheet，按空单元格占比线性扣分（填满分 8）。`checks_config.json` 声明 `expected_deliverables` 时逐一核对存在性。 |
+| `traceability` | **7** | 论文正文抽取前 20 个数值，舍入容差匹配 `02_execution_log.json`（论文 3.0215 vs log 3.02148… 判命中；题面输入常数经 problem.md 豁免）。得分 = `7 × found / checked`。 |
+| `compile` | **3** | `paper.pdf` 页数 ≥20 得 3 分；10–19 页 1.5 分；<10 页或缺失 0 分。 |
+| `compliance` | **8** | 无身份泄露词 2.5 分；无 `\tableofcontents` 2.5 分；存在 AI 声明文件 3 分。 |
+| `answer_check` | **10** | **对照人工共识答案硬校验（2024A 教训新增）**：若 `problems/<id>/reference_answers.json` 存在，逐问检查论文/log 中是否出现容差内一致的共识值；每错一问扣 10/n 问。无标准答案的题按 N/A 满分计并注明。自洽 ≠ 正确。 |
 
 > **映射约定**：生成 `auto_checks.json` 后，`score.md` 的"自动检查"列= `total/40`，直接转录
 > 各 `{item, max, got}`，不得二次改写。
+> **建答案表义务**：凡优秀论文库可提取共识数值的题，入库时必须同时生成 `reference_answers.json`
+> （格式见 2024A 实例），否则该题 answer_check 恒为缺省满分、失去正确性校验能力。
 
 ---
 

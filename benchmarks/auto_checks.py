@@ -108,7 +108,7 @@ def _check_deliverables(run_dir, cfg):
     xlsx_files = _iter_xlsx(run_dir)
     details = []
     if not xlsx_files:
-        return _item("deliverables", 15, 0.0,
+        return _item("deliverables", 12, 0.0,
                      details + ["submissions/ 为空或缺失：0 分"])
 
     got = 0.0
@@ -124,13 +124,13 @@ def _check_deliverables(run_dir, cfg):
             got += 5.0
             details.append(f"期望交付物齐全: {expected}")
     else:
-        got += 5.0
-        details.append("无 expected_deliverables 声明，按非空给 5 分")
+        got += 4.0
+        details.append("无 expected_deliverables 声明，按非空给 4 分")
 
     # (b) 全满检测：任一 sheet 存在空单元格即扣（按空单元格占比线性扣，上限 10 分）
     if openpyxl is None:
         details.append("openpyxl 未安装：空单元格检测跳过（保留非空 5 分）")
-        got += 5.0
+        got += 4.0
     else:
         empty_total = 0
         cell_total = 0
@@ -154,16 +154,16 @@ def _check_deliverables(run_dir, cfg):
             details.append("xlsx 存在但无任何单元格")
         else:
             empty_ratio = empty_total / cell_total
-            fill_score = 10.0 * (1.0 - empty_ratio)
+            fill_score = 8.0 * (1.0 - empty_ratio)
             got += fill_score
             details.append(
                 f"空单元格 {empty_total}/{cell_total} (占 {empty_ratio:.1%})，"
-                f"fill 得分 {fill_score:.1f}/10"
+                f"fill 得分 {fill_score:.1f}/8"
             )
 
-    got = round(min(15.0, got), 2)
-    details.insert(0, f"{len(xlsx_files)} 个 xlsx, 得分 {got}/15")
-    return _item("deliverables", 15, got, details)
+    got = round(min(12.0, got), 2)
+    details.insert(0, f"{len(xlsx_files)} 个 xlsx, 得分 {got}/12")
+    return _item("deliverables", 12, got, details)
 
 
 # --------------------------------------------------------------------------
@@ -202,12 +202,12 @@ def _check_traceability(run_dir):
             break
 
     if not checked:
-        return _item("traceability", 10, 0.0,
+        return _item("traceability", 7, 0.0,
                      [f"论文正文({source})未抽取到有效数值：0 分"])
 
     log = _read_json(run_dir / ".modeling" / "artifacts" / "02_execution_log.json")
     if log is None:
-        return _item("traceability", 10, 0.0,
+        return _item("traceability", 7, 0.0,
                      ["02_execution_log.json 缺失或非 JSON：0 分"])
     log_str = json.dumps(log, ensure_ascii=False)
 
@@ -269,12 +269,12 @@ def _check_traceability(run_dir):
 
     found = [n for n in checked if _hit(n)]
     miss = [n for n in checked if not _hit(n)]
-    got = round(10.0 * len(found) / len(checked), 2)
+    got = round(7.0 * len(found) / len(checked), 2)
     details = [
         f"数值来源={source}，抽查 {len(checked)}/20 个，命中 {len(found)} 个",
         f"miss: {miss}",
     ]
-    return _item("traceability", 10, got, details)
+    return _item("traceability", 7, got, details)
 
 
 # --------------------------------------------------------------------------
@@ -286,20 +286,20 @@ def _check_compile(run_dir):
         try:
             n_pages = len(PdfReader(str(pdf_path)).pages)
             if n_pages >= 20:
-                got = 5.0
+                got = 3.0
                 note = "达标 (≥20 页)"
             elif n_pages >= 10:
-                got = 2.5
+                got = 1.5
                 note = f"半分 ({n_pages} 页，10-19)"
             else:
                 got = 0.0
                 note = f"不足 (<10 页: {n_pages})"
-            return _item("compile", 5, got, [f"paper.pdf 共 {n_pages} 页 → {note}"])
+            return _item("compile", 3, got, [f"paper.pdf 共 {n_pages} 页 → {note}"])
         except Exception as exc:  # noqa: BLE001
-            return _item("compile", 5, 0.0, [f"paper.pdf 损坏无法读取: {exc}"])
+            return _item("compile", 3, 0.0, [f"paper.pdf 损坏无法读取: {exc}"])
     if pdf_path.is_file() and PdfReader is None:
-        return _item("compile", 5, 0.0, ["pypdf 未安装无法判页数：0 分"])
-    return _item("compile", 5, 0.0, ["paper.pdf 不存在：0 分"])
+        return _item("compile", 3, 0.0, ["pypdf 未安装无法判页数：0 分"])
+    return _item("compile", 3, 0.0, ["paper.pdf 不存在：0 分"])
 
 
 # --------------------------------------------------------------------------
@@ -315,14 +315,14 @@ def _check_compliance(run_dir):
     if leaks:
         details.append(f"身份泄露命中词语: {leaks} (0/3)")
     else:
-        got += 3.0
+        got += 2.5
         details.append("无身份泄露词 (3/3)")
 
     # (b) 无目录页（3 分）
     if "\\tableofcontents" in body:
         details.append(f"出现 \\tableofcontents (0/3)")
     else:
-        got += 3.0
+        got += 2.5
         details.append("无 \\tableofcontents (3/3)")
 
     # (c) AI 声明文件（4 分）
@@ -334,12 +334,89 @@ def _check_compliance(run_dir):
                 found_name = f.name
                 break
     if found_name:
-        got += 4.0
+        got += 3.0
         details.append(f"存在 AI 声明文件 {found_name} (4/4)")
     else:
         details.append("manuscript/ 下无 AI_Tool_Disclosure.md / AI声明 文件 (0/4)")
 
-    return _item("compliance", 10, round(got, 2), details)
+    return _item("compliance", 8, round(got, 2), details)
+
+
+# --------------------------------------------------------------------------
+# 检查项 5：answer_check（10）—— 对照人工共识答案（reference_answers.json）
+# 2024A 教训：自洽≠正确。数值题答案与人工共识偏离即重扣。
+# 权重调整说明：加入本项后总分上限仍为 40——traceability 10→7，
+# compile 5→3，compliance 10→8，answer_check 占 10。旧 run 无
+# reference_answers.json 时本项按缺省满分处理并在 details 注明 N/A。
+# --------------------------------------------------------------------------
+def _check_answer(run_dir):
+    ref = _read_json(run_dir / "reference_answers.json")
+    if not ref or "answers" not in (ref or {}):
+        return _item("answer_check", 10, 10.0,
+                     ["N/A: 无 reference_answers.json（该题未建标准答案），按缺省满分计"])
+    log = _read_json(run_dir / ".modeling" / "artifacts" / "02_execution_log.json")
+
+    # 收集论文文本（答案可能只在论文/表格中出现）
+    body = ""
+    pdf_path = run_dir / ".modeling" / "manuscript" / "paper.pdf"
+    if PdfReader is not None and pdf_path.is_file():
+        try:
+            body = "\n".join((p.extract_text() or "") for p in PdfReader(str(pdf_path)).pages)
+        except Exception:  # noqa: BLE001
+            pass
+    if not body.strip():
+        body = grep_tex_contents(run_dir)
+    log_str = json.dumps(log, ensure_ascii=False) if log else ""
+
+    per_q = ref["answers"]
+    n_pass = 0
+    details = []
+    n_scored = 0
+    for qid, spec in per_q.items():
+        cons = spec.get("consensus")
+        if cons is None:
+            continue
+        # 该类目若是定性描述（如理论证明）则跳过数值比对
+        if isinstance(cons, str):
+            continue
+        tol = float(spec.get("tolerance", 0.01))
+        n_scored += 1
+        hit = False
+        # 在论文文本中找与共识值容差内一致的数字
+        pat = re.compile(r"(?<![\d.])" + re.escape(f"{cons:.4f}".rstrip("0").rstrip(".")) +
+                         r"|(?<![\d.])" + re.escape(f"{round(cons, 3)}") +
+                         r"|(?<![\d.])" + re.escape(f"{round(cons, 2)}") + r"(?![\d.])")
+        m = re.search(pat, body) if body else None
+        if m:
+            hit = True
+        elif log_str:
+            # 或在 log 中找容差内的浮点值
+            def _walk(o):
+                if isinstance(o, bool):
+                    return
+                if isinstance(o, (int, float)):
+                    yield float(o)
+                elif isinstance(o, dict):
+                    for v in o.values():
+                        yield from _walk(v)
+                elif isinstance(o, list):
+                    for v in o:
+                        yield from _walk(v)
+            try:
+                hit = any(abs(v - float(cons)) <= tol for v in _walk(log))
+            except Exception:  # noqa: BLE001
+                hit = False
+        if hit:
+            n_pass += 1
+            details.append(f"{qid}: 命中共识值 {cons} ✓")
+        else:
+            details.append(f"{qid}: 未找到共识值 {cons}（±{tol}）→ 答案疑似错误 ✗")
+
+    if n_scored == 0:
+        return _item("answer_check", 10, 10.0,
+                     ["N/A: reference_answers.json 无可数值比对的条目"])
+    got = round(10.0 * n_pass / n_scored, 2)
+    return _item("answer_check", 10, got, details)
 
 
 # --------------------------------------------------------------------------
@@ -352,6 +429,7 @@ def run_all(run_dir: pathlib.Path) -> dict:
         _check_traceability(run_dir),
         _check_compile(run_dir),
         _check_compliance(run_dir),
+        _check_answer(run_dir),
     ]
     total = round(sum(c["got"] for c in checks), 2)
     return {
