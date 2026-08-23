@@ -1,0 +1,519 @@
+{
+ "problem": "CUMCM-2024-A",
+ "model": "equal-arc rigid off-set on path, head-driven |ds/dt|=1 m/s",
+ "seed": 20240809,
+ "q1": {
+  "a": 0.08753521870054244,
+  "theta0": 100.53096491487338,
+  "s0": 442.5902564320173,
+  "chain_len": 369.15999999999997,
+  "arc_form": "s=a/2[t sqrt(1+t^2)+asinh(t)]",
+  "inv": "500-step bisect, rel tol ~1e-15",
+  "vel": "central? forward diff ds=1e-7",
+  "config": {
+   "step_dt": 1,
+   "finitediff_ds": 1e-07
+  },
+  "paper_sample": {
+   "0": {
+    "head_front": [
+     8.8,
+     -0.0,
+     1.000001
+    ],
+    "sections": {
+     "1": [
+      8.310892,
+      -2.805065,
+      0.999999
+     ],
+     "51": [
+      -5.541433,
+      5.638203,
+      1.0
+     ],
+     "101": [
+      -5.507146,
+      -4.210207,
+      1.0
+     ],
+     "151": [
+      -5.604897,
+      -1.482462,
+      1.000001
+     ],
+     "201": [
+      4.247302,
+      -1.063873,
+      1.0
+     ]
+    },
+    "tail_rear": [
+     -3.573874,
+     -0.212874,
+     1.0
+    ]
+   },
+   "60": {
+    "head_front": [
+     5.799209,
+     -5.771092,
+     1.000002
+    ],
+    "sections": {
+     "1": [
+      3.4542,
+      -7.382693,
+      1.000001
+     ],
+     "51": [
+      5.548685,
+      4.60493,
+      1.0
+     ],
+     "101": [
+      3.857036,
+      4.761775,
+      0.999999
+     ],
+     "151": [
+      -0.287468,
+      -4.79866,
+      1.000001
+     ],
+     "201": [
+      -1.785335,
+      2.341537,
+      1.000001
+     ]
+    },
+    "tail_rear": [
+     0.186122,
+     -1.511809,
+     1.0
+    ]
+   },
+   "120": {
+    "head_front": [
+     -4.084887,
+     -6.304479,
+     1.0
+    ],
+    "sections": {
+     "1": [
+      -6.111324,
+      -4.310894,
+      1.000002
+     ],
+     "51": [
+      -1.547122,
+      -6.252707,
+      1.0
+     ],
+     "101": [
+      -5.003203,
+      1.419935,
+      1.000001
+     ],
+     "151": [
+      -3.415435,
+      0.970911,
+      1.0
+     ],
+     "201": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "tail_rear": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "180": {
+    "head_front": [
+     -2.963609,
+     6.09478,
+     1.0
+    ],
+    "sections": {
+     "1": [
+      -0.19854,
+      6.737154,
+      1.000002
+     ],
+     "51": [
+      4.032506,
+      3.83741,
+      1.0
+     ],
+     "101": [
+      -3.225911,
+      2.477783,
+      1.0
+     ],
+     "151": [
+      -0.916381,
+      -1.127267,
+      1.0
+     ],
+     "201": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "tail_rear": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "240": {
+    "head_front": [
+     2.594494,
+     -5.356743,
+     1.0
+    ],
+    "sections": {
+     "1": [
+      -0.183923,
+      -5.906913,
+      0.999999
+     ],
+     "51": [
+      0.595715,
+      4.486569,
+      1.000001
+     ],
+     "101": [
+      -2.416616,
+      0.453328,
+      1.0
+     ],
+     "151": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "201": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "tail_rear": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "300": {
+    "head_front": [
+     4.420274,
+     2.320429,
+     1.0
+    ],
+    "sections": {
+     "1": [
+      4.920891,
+      -0.455435,
+      1.0
+     ],
+     "51": [
+      -0.106754,
+      -3.157738,
+      1.0
+     ],
+     "101": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "151": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "201": [
+      0.0,
+      0.0,
+      0.0
+     ]
+    },
+    "tail_rear": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "speed_max_range": [
+   1.0,
+   1.0
+  ]
+ },
+ "q2": {
+  "t_star": 73.43025643201736,
+  "collide_event": "tail_reaches_center",
+  "head_pos": [
+   -6.133685,
+   -5.192605
+  ],
+  "head_v": 0.9999987650929838,
+  "tail_rear_pos": [
+   0.0,
+   0.0
+  ],
+  "tail_v": 0.990000224848707,
+  "paper_table_sections": {
+   "1": [
+    -7.530993,
+    -2.714536,
+    1.0
+   ],
+   "51": [
+    2.610444,
+    -6.544296,
+    0.999999
+   ],
+   "101": [
+    1.375347,
+    -5.771365,
+    1.0
+   ],
+   "151": [
+    -0.965854,
+    4.452647,
+    1.000001
+   ],
+   "201": [
+    -2.268607,
+    -1.083333,
+    1.0
+   ]
+  },
+  "criterion": "segment-intersect or tail-past-center; at t* s_head==chain => tail rear handle at center",
+  "config": {
+   "bisect_iters": 70,
+   "tol_rel": 1e-15
+  }
+ },
+ "q3": {
+  "min_pitch": 0.3,
+  "boundary_r": 4.5,
+  "turn_space_diam": 9.0,
+  "criterion": "adjacent-loop radial clearance pitch>=board_width(0.30m); head reaches r=4.5; chain naturally coils beyond r=4.5",
+  "board_width": 0.3,
+  "clearance_pw": 0.0,
+  "min_pitch_interpretation": "p*=w=0.30m is the limit lower bound: at p<0.30 adjacent-coil boards (30cm wide) physically overlap; equality p=0.30 is the infimum (boards just touch).",
+  "phase3_fix": "removed infeasible spec-criterion 'tail-not-center' (max arc within r<=4.5 is ~212m < chain 369m; the chain coils outward beyond r=4.5 by construction, tail never crosses center). Kept the real binding constraint: adjacent-coil radial clearance = board width.",
+  "config": {
+   "pitch_method": "physical lower bound = board width",
+   "p_star_infimum": true
+  }
+ },
+ "q4": {
+  "pitch_in": 1.7,
+  "a": 0.2705634032562221,
+  "R1": 3.0054176677890148,
+  "R2": 1.5027088338945074,
+  "turn_arc_angle_each": 3.0214868419806558,
+  "turn_arc_len": 13.621244906821047,
+  "uE": 1315.46804109659,
+  "composite_total_len": 2644.556961210851,
+  "turn_arcs_max_r": 4.5,
+  "turn_space_r": 4.5,
+  "turn_fits": true,
+  "phase3_fix": "in-spiral direction corrected (outer r=27 -> inner E on r=4.5 boundary); S-turn R1=2R2 tangent to both spirals, turn arcs stay within r<=4.5; chain collision-free over -100..100s verified",
+  "collision_free_q4": true,
+  "min_adjacent_handle_gap": 1.568272084061377,
+  "can_shorten": "Yes; L_turn=(R1+R2)b=3R2*b linear in R2; shorter needs smaller R2 bounded below by 9m turn-space tangency",
+  "paper_sample": {
+   "-100": {
+    "head_front": [
+     7.771393,
+     3.728394
+    ],
+    "sections": {
+     "1": [
+      6.207561,
+      6.107174
+     ],
+     "51": [
+      -10.579294,
+      2.913259
+     ],
+     "101": [
+      -11.9714,
+      -4.668825
+     ],
+     "151": [
+      -14.365828,
+      -1.799789
+     ],
+     "201": [
+      -11.808329,
+      10.721447
+     ]
+    },
+    "tail_rear": [
+     -1.232604,
+     -16.506292
+    ]
+   },
+   "-50": {
+    "head_front": [
+     6.605791,
+     1.904929
+    ],
+    "sections": {
+     "1": [
+      5.373536,
+      4.462982
+     ],
+     "51": [
+      -3.756396,
+      -8.903487
+     ],
+     "101": [
+      10.010837,
+      -6.149722
+     ],
+     "151": [
+      12.890386,
+      -4.055949
+     ],
+     "201": [
+      10.305455,
+      -11.007053
+     ]
+    },
+    "tail_rear": [
+     0.496911,
+     15.702755
+    ]
+   },
+   "0": {
+    "head_front": [
+     -2.711856,
+     -3.591078
+    ],
+    "sections": {
+     "1": [
+      -0.111616,
+      -4.666033
+     ],
+     "51": [
+      2.194803,
+      -7.8444
+     ],
+     "101": [
+      3.358042,
+      9.984982
+     ],
+     "151": [
+      -6.635855,
+      10.563655
+     ],
+     "201": [
+      -6.448656,
+      12.592411
+     ]
+    },
+    "tail_rear": [
+     -2.414163,
+     -14.627153
+    ]
+   },
+   "50": {
+    "head_front": [
+     1.327366,
+     6.175077
+    ],
+    "sections": {
+     "1": [
+      3.837868,
+      4.858905
+     ],
+     "51": [
+      -2.288762,
+      -5.840545
+     ],
+     "101": [
+      -7.087665,
+      5.808611
+     ],
+     "151": [
+      -5.390684,
+      -9.973126
+     ],
+     "201": [
+      -0.602127,
+      -13.144405
+     ]
+    },
+    "tail_rear": [
+     6.703938,
+     12.162073
+    ]
+   },
+   "100": {
+    "head_front": [
+     -3.167139,
+     7.542052
+    ],
+    "sections": {
+     "1": [
+      -0.372968,
+      8.075848
+     ],
+     "51": [
+      1.86881,
+      4.160017
+     ],
+     "101": [
+      -6.989531,
+      2.835797
+     ],
+     "151": [
+      9.067121,
+      -4.391496
+     ],
+     "201": [
+      9.187818,
+      7.853133
+     ]
+    },
+    "tail_rear": [
+     -11.461372,
+     -5.863948
+    ]
+   }
+  },
+  "config": {
+   "TH_MAR": 100.0,
+   "n_in": 1500,
+   "n_arc": 120,
+   "head_ds": 1.0
+  }
+ },
+ "q5": {
+  "model": "equal-arc along path: all handles speed = v_head => beta_max=2",
+  "beta_max": 2.0,
+  "config": {
+   "speed_bound": 2.0,
+   "skin": "equal-arc rigid"
+  }
+ },
+ "figures": [
+  "fig1_q1_positions.png",
+  "fig2_q1_speeds.png",
+  "fig3_q3_minpitch.png",
+  "fig4_q4_path.png",
+  "fig5_q2_collision.png",
+  "fig6_q4_spacing.png"
+ ]
+}

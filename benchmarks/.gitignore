@@ -1,0 +1,31 @@
+# runs 快照中忽略大二进制 / 可重放中间产物，但保留 score.md 与 auto_checks.json
+runs/**/data/
+runs/**/.modeling/scratch/
+runs/**/.modeling/artifacts/figures/
+runs/**/.modeling/artifacts/submissions/
+runs/**/.modeling/engines/
+runs/**/*.aux
+runs/**/*.log
+runs/**/*.out
+runs/**/*.toc
+runs/**/*.bbl
+runs/**/*.blg
+runs/**/*.synctex.gz
+runs/**/*.fdb_latexmk
+runs/**/*.fls
+runs/**/*.xdv
+
+# 保留 trackable 的小文件，禁止忽略：
+!runs/**/score.md
+!runs/**/auto_checks.json
+!runs/**/checks_config.json
+!runs/**/.modeling/artifacts/02_execution_log.json
+!runs/**/.modeling/manuscript/sections/
+!runs/**/.modeling/manuscript/AI_Tool_Disclosure.md
+# problems/ 大附件：题目 PDF 与常规 xlsx/csv 保留，超大原始数据本地留存不入库
+problems/2024E/data/附件2.csv
+# 超过 10MB 的原始数据本地留存（跑分可用），不入 git
+problems/2023C/data/附件2.xlsx
+problems/2021E/data/附件2.xlsx
+problems/2021E/data/附件3.xlsx
+problems/2021E/data/附件4.xlsx

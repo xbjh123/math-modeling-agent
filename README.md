@@ -47,17 +47,29 @@ math-modeling/
 │   ├── model_critic.md                 # 审稿专家（产物 DAG 强契约审查与三级预警）
 │   ├── modeling_synthesizer.md         # 方案仲裁与四维量化打分矩阵
 │   ├── deep_formalizer.md              # 公理化数学推导引擎
+│   ├── draft_protocol.md               # [统一微草案协议] 6 探索型角色统一输出卡片结构
 │   ├── online_prior_scout.md           # 联网先验探查者
 │   ├── online_benchmark_miner.md       # 顶刊基准勘察者
 │   ├── offline_mechanistic.md          # 微分机理与纵向动力学派 (含具身 Python 自验证沙盒)
 │   ├── offline_optimization.md         # 离散运筹与时空规划派 (含具身 Python 自验证沙盒)
 │   ├── offline_survival_stat.md        # 随机生存与 CVaR 规划派 (含具身 Python 自验证沙盒)
-│   └── offline_robust_decision.md      # 稳健质控与秩相关决策派 (含具身 Python 自验证沙盒)
+│   ├── offline_robust_decision.md      # 稳健质控与秩相关决策派 (含具身 Python 自验证沙盒)
+│   ├── production_engineer.md          # 确定性算力引擎工程师（规格书→可执行代码→数值溯源）
+│   ├── modeling_reporter.md            # 建模报告撰写者（论文手交付接口，人工审批门禁产物）
+│   └── chapter_writer.md               # 参数化章节撰写者（Writer-Ch1..Ch5 共用，CUMCM 格式约束）
 ├── templates/                          # [长篇排版与合规模板]
 │   ├── main_template.tex               # 模块化 30+ 页 LaTeX 总装模板 (\input 架构)
+│   ├── sections/                       # 模板内嵌的 5 个最小占位章节（开箱可编译）
 │   └── ai_disclosure_template.md       # 2026 官方合规《AI工具使用声明与详情》模板
 ├── references/                         # [审稿规则与高分范式库]
 │   └── cumcm_reviewer_pitfalls.md      # 提炼自命题组与评阅专家的扣分拦截与升级梯子库
+├── benchmarks/                         # [评测驱动迭代引擎]
+│   ├── README.md                       # 基准评测协议（真题入库/跑流程/快照/对比回归）
+│   ├── scoring_rubric.md               # 百分制双轨评分体系（自动 40 + 人工 60 + 人机对比）
+│   └── auto_checks.py                  # 确定性自动检查器（交付物/溯源/编译/合规）
+├── tests/                              # pytest 回归套件（算法/模板/SKILL 引用完整性）
+├── .github/workflows/ci.yml            # GitHub Actions：pytest + tectonic 编译冒烟
+├── ROADMAP.md                          # 迭代路线图（里程碑 M0-M3 / 技术债 / 回灌机制）
 └── scripts/                            # [确定性底层算法工具箱]
     ├── greedy_segmentation.py          # 有序特征异质性贪心切分算法
     ├── lmm_variance_decomp.py          # 纵向 LMM 方差分解与 REML 评估器

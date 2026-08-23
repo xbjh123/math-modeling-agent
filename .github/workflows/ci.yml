@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    name: pytest (scripts algorithms)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: pip install --quiet numpy pandas scipy statsmodels pytest pypdf
+
+      - name: Run pytest
+        run: python -m pytest tests/ -v
+
+  tectonic-compile:
+    name: Tectonic tex smoke build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # 最稳的官方安装方式：taiki-e/install-action 直接下载 tectonic 预编译二进制，
+      # 避免 cargo install 漫长编译。
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: tectonic
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install pypdf
+        run: pip install --quiet pypdf
+
+      - name: Tectonic compile + page-count assert
+        # ctex 中文宏包首次编译需联网下载相关包，时间预留充足（>= 15 分钟）。
+        timeout-minutes: 20
+        run: |
+          tmp="$(mktemp -d)"
+          cp templates/main_template.tex "$tmp/main.tex"
+          cp -r templates/sections "$tmp/sections"
+          cd "$tmp"
+          tectonic main.tex
+          ls -la main.pdf
+          python - <<'EOF'
+          from pypdf import PdfReader
+          reader = PdfReader("main.pdf")
+          n = len(reader.pages)
+          print(f"OK: main.pdf produced with {n} page(s)")
+          assert n >= 1, f"expected >= 1 page, got {n}"
+          EOF
