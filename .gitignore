@@ -38,3 +38,8 @@ wheels/
 # OS
 .DS_Store
 Thumbs.db
+
+# math-modeling-agent runtime artifacts (运行流水线中间产物，不入库)
+.modeling/
+# 具体的真题运行产物（每次跑题变化，不入库）
+benchmarks/problems/*/.modeling/

@@ -1,11 +1,11 @@
 ---
 name: math-modeling-agent
-description: 工业级/竞赛级数学建模多智能体协同流水线（CUMCM/MCM）。数据契约摸底 → 6 正交流派 Subagent 发散与具身自验证 → 仲裁打分与公理化规格书 → 确定性引擎全尺寸求解与 Excel 填报 → Model-Critic 三级审计 → 参数化章节并行编纂与 Tectonic 总装编译，全程产物 DAG 持久化于 .modeling/。
+description: 竞赛级数学建模快速流水线（精简版）。数据摸底 → HMML 方法检索定向发散 → Actor-Critic 精炼 → 求解 → 轻审稿 → 串行写作。保留多流派发散与反过拟合纪律，砍掉过度验证与并行编纂。
 ---
 
-# 数学建模多智能体协同全景工作流
+# 数学建模快速流水线（精简版）
 
-接获数学建模赛题或科研建模任务时，按以下八阶段状态机执行（Phase 0 → 1 → 2 → 3 → 4 → 5a → 5b）。所有中间状态与产物强制持久化至当前工作区 `.modeling/`，任何阶段不得跳过其前置阶段的产物核验。
+接获数学建模赛题或科研建模任务时，按以下精简状态机执行（Phase 0 → 1 → 2 → 3 → 4 → 5）。核心原则：**默认走最短路径，严谨只在真正需要的那一步才上**。多子智能体发散模式保留，但提示词只做方向引导，不做强制约束。
 
 ## 平台适配（先读我）
 
@@ -17,94 +17,113 @@ description: 工业级/竞赛级数学建模多智能体协同流水线（CUMCM/
 | 文件读写 | 内置文件工具 | Read/Write/Edit | `read_file` / `write_file` / `patch` |
 | Python 执行 | 内置代码执行沙盒 | Bash + python | `terminal` / Jupyter kernel |
 
-若当前环境不支持并发子代理，阶段 1 的 6 个探索组退化为**串行逐个加载**对应 roles/*.md 提示词并依次产出草案；阶段 5b 的章节写作同理。禁止因平台能力不足而跳过任何产物。
+若环境不支持并发子代理，阶段 1 的多个流派**串行**逐个加载对应 roles/*.md 并依次产出方向卡片。禁止因平台能力不足而跳过。
 
-## 运行模式
+## 健康与适配检测（首次运行必做，之后跳过）
 
-| | 实战模式（默认） | benchmark 模式 |
-| :-- | :-- | :-- |
-| 触发条件 | 用户未声明时 | 工作区存在 `benchmarks/runs/` 调度标记或用户明示 |
-| 建模报告审批 | 必须人工批准（阶段 5 门禁） | Model-Critic 代审并记录结论后自动放行 |
-| 用途 | 真实参赛交付 | 版本回归评测 / 人机对比 |
+> [!important] 首次运行本 skill 时的前置步骤
+> 本项目库未出现 `.modeling/.health_checked` 标记时，**必须**先跑一次健康与适配检测，用于确认该 skill 在当前 agent 环境中的兼容性（subagent 并发、工具调用、脚本可运行、最小流程链路）。检测通过后再进入正式流水线；以后运行（存在 `.health_checked`）直接跳过，不再重复消耗。
 
-## 阶段 0：数据摸底与强类型契约初始化 (Contract Init)
+### 执行步骤
 
-1. 创建标准工作区：`.modeling/{data_contract,scratch,drafts,specs,engines,audit}/`、`.modeling/artifacts/{submissions,figures}/`、`.modeling/manuscript/sections/`
-2. 通读赛题原文与附件数据集，构建 `.modeling/data_contract/problem_profile.json`：
-   - `scale`：问题规模维度（如 {地块数 I, 品种数 K, 周期数 T} 或 {受试者 n, 观测时点 m}），**必须从赛题实际抽取，禁止预设数值**；
-   - `constraints[]`：赛题明示的全部刚性约束清单（每条含编号、数学表述、违反后果）；
-   - `deliverables[]`：赛题要求提交的结果文件（Excel 表名、图表、结论形式）；
-   - `unknowns[]`：赛题未言明、需向参赛队确认的口径问题。
-3. 若附件含数据集：先跑描述统计与缺失值画像，写入 `problem_profile.json` 的 `data_fingerprint` 字段。
+1. **环境与代码层自检**（确定性，自动）：
+   ```bash
+   python scripts/health_check.py
+   ```
+   会检查：Python 版本与科学计算库、Tectonic/Node 可用性、`scripts/` 5 个算法模块导入+冒烟、HMML 方法库存在性、SKILL 引用完整性、以及**最小流程**（HMML 检索 → 落盘 `00_retrieval.json` → 读回 → 流派 school 合法）。结果打印为人类可读报告并落盘 `.modeling/health_report.json` + `.modeling/.health_checked`。
 
-## 阶段 1：6 正交流派并发探索与具身自验证 (Divergence & Self-Verification)
+2. **Agent 层适配自评**（由主 agent 依据当前平台填写，脚本只做占位提示）：
+   - **并发 subagent**：`delegate_task(tasks=[...])`（Hermes）/ `invoke_subagent`（Antigravity）/ Task 多实例（Claude Code）是否可用？若不可用，阶段 1 需退化为**串行**加载 roles/*.md。
+   - **文件工具**：`read_file` / `write_file` / `patch` 是否可用？
+   - **Python 执行**：`terminal` / Jupyter kernel 可否运行脚本？
+   - 把上述 3 项结论**写入 agent 记忆系统**（`memory` 工具，target=memory），记录"本 skill 在此平台的 subagent/工具兼容性"，供后续会话复用，避免每次重测。
 
-1. 按平台适配表并发（或串行退化）调起 6 个独立 Subagent，各自加载对应角色提示词：
-   - 联网组 Prior：`roles/online_prior_scout.md` → `drafts/draft_online_prior.md`
-   - 联网组 Benchmark：`roles/online_benchmark_miner.md` → `drafts/draft_online_benchmark.md`
-   - 断网组 A Mechanistic：`roles/offline_mechanistic.md` → `drafts/draft_offline_mechanistic.md`
-   - 断网组 B Optimization：`roles/offline_optimization.md` → `drafts/draft_offline_optimization.md`
-   - 断网组 C Stochastic/Survival：`roles/offline_survival_stat.md` → `drafts/draft_offline_survival.md`
-   - 断网组 D Robust/QC：`roles/offline_robust_decision.md` → `drafts/draft_offline_robust.md`
-2. 全部草案统一遵循《统一微草案协议》（`roles/draft_protocol.md`）。
-3. **具身代码自验证铁律**：建模 Agent 在输出任何公式前，必须在 `.modeling/scratch/` 运行 Python/SymPy 微脚本自测（代数求导核验、小规模可行域试解、协方差矩阵半正定性检查），并把运行记录写入草案卡片的"具身自验证记录"栏。无自验证记录的公式视为未经验证。
+### 首次运行后
 
-## 阶段 2：方案仲裁与公理化规格书展开 (Formalization)
+- 若检测**通过**：在 agent 记忆里记下 `math-modeling-agent 在<平台> 适配 OK（delegate_task 可用/串行退化/…）`，并继续进入阶段 0。
+- 若检测**失败**（如 scripts 报错、pulp 缺失影响运筹求解、subagent 不可用）：先修复，再重跑 health_check；无法修复的项（如 pulp）在 agent 记忆里注明"运筹求解需 pip install pulp"。
 
-1. 调起 `roles/modeling_synthesizer.md` 对 6 份草案做四维量化打分，生成 `.modeling/specs/01a_arbitration_report.md`，确立主模型、基准对照模型与不确定性模块（主备分工，禁止直接丢弃次优草案）。
-2. 调起 `roles/deep_formalizer.md`，将选定架构展开为 `.modeling/specs/01_math_formulation.md`：完整符号量纲闭环表、闭式目标函数、理论性质（凸性/KKT/极值条件）、参数辨识伪算法、基准对照模型形式化。杜绝"略、易得、同理可得"。
+## 探索流派与归属映射（HMML school → roles/）
 
-## 阶段 3：确定性算力引擎全尺寸求解 (Production Engines)
+| HMML 归属 school | 角色文件 | 覆盖的建模方向 |
+| :--- | :--- | :--- |
+| `opt` | `roles/offline_optimization.md` | 运筹/时空规划：LP、MILP、DP、图论、GA/SA/PSO、KKT、网络流 |
+| `mech` | `roles/offline_mechanistic.md` | 机理/纵向动力学：ODE/PDE、LMM、传染病、守恒/传播方程 |
+| `surv` | `roles/offline_survival_stat.md` | 随机/生存/风险：Cox/AFT、GARCH、排队论、CVaR、MDP |
+| `robust` | `roles/offline_robust_decision.md` | 稳健/评价：熵权法、TOPSIS、AHP、秩相关检验、ANOVA |
+| `pred` | `roles/offline_prediction_ml.md` | **预测/机器学习（本次新增）**：ARIMA、灰色GM(1,1)、SVM、K-means、PCA、Boosting、岭/泊松回归 |
+| （联网） | `roles/online_prior_scout.md` / `roles/online_benchmark_miner.md` | 领域先验/常数 / 顶刊基准与数学范式 |
 
-1. 调起 `roles/production_engineer.md` 承担本阶段全部工作。
-2. **EDA 图谱**：先向 `.modeling/artifacts/figures/` 导出前置探索性图表（分布画像、相关性热力图、分组对比），数量以赛题实际需要为准，不设固定张数。
-3. **全尺寸求解**：按规格书实现求解器，先小规模冒烟再全量运行；强制向 `.modeling/artifacts/submissions/` 导出 `problem_profile.json` 中 deliverables 列明的全部结果文件（Excel 须填满，不留空单元格）。
-4. **数值溯源铁律**：所有进入论文的数值（参数估计、CI、检验统计量、目标函数值）必须同步写入 `.modeling/artifacts/02_execution_log.json`（含输入参数、随机种子、求解器配置、收敛标志）。论文中任何无法在 log 中溯源的数字视为幻觉数据。
+阶段 1 由 `method_retrieve.py` 的 school 字段决定派哪个 subagent；命中多个方向则只派相关的 2-3 个，其余跳过。
 
-## 阶段 4：审稿质检与产物 DAG 强核验 (Reviewer-2 Audit)
+## 阶段 0：数据摸底 (Brief Recon)
 
-1. 调起 `roles/model_critic.md`，基于 `references/cumcm_reviewer_pitfalls.md` 对 specs + execution log + submissions 做交叉审计：
-   - 代码-公式 100% 对齐审查；
-   - 数值溯源校验：抽查论文拟用数值能否在 `02_execution_log.json` 复现；
-   - 填报完整性：submissions 文件齐全且无空单元格；
-   - 不确定性分析完备性（区间估计 / 灵敏度 / 噪声扰动至少其二）。
-2. 输出 `.modeling/audit/03_audit_report.md`，问题按 Level 1（致命阻断）/ Level 2（附辩解放行）/ Level 3（高分亮点清单）三级裁决。存在 Level 1 时回退修复重跑，禁止带病进入阶段 5a。
+1. 读赛题原文 + 附件数据，**粗读**即可，不做画像。
+2. 落盘 `.modeling/problem_profile.json`，只记三样：
+   - `scale`：问题规模（如 {地块 I, 品种 K, 周期 T} 或 {被试 n, 时点 m}）；
+   - `deliverables[]`：要求提交的结果文件（Excel 表名、图表、结论形式）；
+   - `constraints[]`：题目明示的刚性约束（简短列出，不展开）。
 
-## 阶段 5a：建模报告撰写与人工审批门禁 (Modeling Report & Gate)
+## 阶段 1：HMML 方法检索 + 定向发散 (Retrieve & Diverge)
 
-1. 调起 `roles/modeling_reporter.md`，消费规格书、执行日志、submissions 与审计报告，产出面向论文手的交接文档 `.modeling/manuscript/modeling_report.md`（一页速览 + 逐问题思路/计算/结果解读 + 局限辩护 + 符号附录，全部数值带 log 溯源锚点）。
-2. **审批门禁（实战模式强制）**：报告置 `STATUS: PENDING_REVIEW` 提交用户审批；仅当用户改为 `STATUS: APPROVED` 后方可进入阶段 5b；`REJECTED` 则按 `> REVIEW:` 意见修订重报。
-3. benchmark 模式下由 Model-Critic 代行审批，在 score.md 记录代审结论后放行。
+检索结果传送给 subagent 的机制（关键）：**检索结果 → 落盘 `00_retrieval.json` → 主线程读回 → 按归属流派派 subagent → 方法与核心思想塞进该 subagent 的任务书 context**。subagent 是独立上下文，看不到主进程变量，所以必须经"落盘 + 任务书注入"这条链，而不是靠 Python 内存传。
 
-## 阶段 5b：章节规划与并行编纂 (Publication)
+1. **检索**：用 `references/method_library.md`（HMML）+ `scripts/method_retrieve.py` 对题目做关键词匹配，筛出相关方法。每个检索结果带一个**归属流派 school**（opt/mech/surv/robust/pred 之一，见脚本内置映射）。
+2. **落盘**：调用 `save_to_json(结果, 工作区根)` 把命中方法写入 `.modeling/specs/00_retrieval.json`（含 method / core_idea / school / hits）。
+3. **主线程读回**：`load_from_json(工作区根)` 读回命中方法。
+4. **定向发散**：按每个命中方法的 `school` 决定派哪个 subagent；只让命中的 2-3 个方向各派一个 Subagent 发**方向卡片**（`drafts/draft_<方向>.md`），其余方向跳过。**任务书（context）必须包含：该方向的完整检索方法 + 核心思想 + 题目关键信息**，让 subagent 无需回读文件即可开工。
+5. 每张方向卡片只写三样：**建模哲学**（为何契合）/**拟用模型族**（候选模型）/ **关键难点**（最可能被质疑的点 + 一句话化解）。
+6. 方向卡片统一用 `roles/draft_protocol.md` 结构（三部分）。
 
-1. **先规划后写作**：依据赛题实际问题数生成 `.modeling/manuscript/chapter_plan.json`——每章条目含 chapter_id、title、source_specs、source_logs、target_pages。章节划分必须映射赛题的真实问题结构（例如三问赛题即"引言与EDA / 问题一模型 / 问题二模型 / 问题三模型 / 灵敏度与附录"五分法，两问赛题则四分法），禁止套用任何预设题目结构。Chapter-Writers 的素材以**已批准的 modeling_report.md 为第一输入**（其结论措辞与数值口径必须与报告一致）。
-2. 并发调起 N 个 Chapter-Writers（共用角色文件 `roles/chapter_writer.md`，各自领取 plan 中的一个条目），产出 `.modeling/manuscript/sections/<chapter_id>.tex`。
-3. **总装编译**：复制 `templates/main_template.tex` 至 `.modeling/manuscript/main.tex`（模板已内嵌 sections/ 占位结构），调用 Tectonic 编译：`tectonic main.tex`。编译错误按日志逐条修复后重跑，直至产出 `paper.pdf`。
-4. **合规文件强制导出**：`.modeling/manuscript/AI_Tool_Disclosure.md`（基于 `templates/ai_disclosure_template.md` 按队伍真实使用情况填写）。此文件为编译完成后的**硬性验收项**：缺失即视为阶段 5b 未完成，须补齐后重新核验（auto_checks compliance 项会扣 4 分）。
+## 阶段 2：Actor-Critic 精炼 (Refine)
 
-## 全局铁律（贯穿所有阶段）
+1. **Actor** 建模 agent：基于检索到的候选方法 + 方向卡片，产出**初始建模方案**（模型 + 目标函数闭式 + 关键假设）。
+2. **Critic** 审稿 agent：评估该方案质量，给出**针对性反馈**（哪里过度简化、哪里假设不稳、哪里能加分）。
+3. **Actor 修正**：整合 critic 反馈，迭代 **2 轮**收敛，产出 `.modeling/specs/01_math_formulation.md`，只含：符号表、闭式目标函数、关键假设。
+4. 不做公理化 KKT / 凸性 / 极值证明。**理论证明只在确实需要证明最优性时才做**（如"调头曲线长度不变"这类硬核题）。
 
-1. **产物 DAG 契约**：下游角色只消费上游落盘产物（草案→仲裁报告→规格书→执行日志→审计报告→章节 tex），口头传递一律无效。
-2. **数值防幻觉**：论文中每个数字必须能在 `02_execution_log.json` 中溯源；Model-Critic 抽查复算。
-3. **反过拟合统计纪律**：数据驱动的结构选择（切点、分组、变量筛选）必须附显著性检验或交叉验证证据，禁止在纯噪声上构造显著性；惩罚/正则超参数须做灵敏度说明。
-4. **竞赛合规红线**：匿名性（无学校/姓名/赛区信息）、无目录页、摘要独立成页、主节"一、二、三、"编号；AI 使用声明按 2026 试行规定如实填写。
-5. **失败诚实原则**：求解器不收敛、检验不显著、编译报错，均如实写入对应产物文件，禁止静默跳过或编造成功状态。
+## 阶段 3：求解 (Solve)
+
+1. 实现代码（scipy/numpy/pandas/pulp），**先小规模冒烟再全量**。
+2. 求解正确 + 填满 `.modeling/artifacts/submissions/` 交付表（Excel 各 sheet 不留空）。
+3. **轻纪律**：进入论文的关键数字必须能被脚本复现（一次运行记录），不做全套 log 审计。
+
+## 阶段 4：轻审稿 (Quick Review)
+
+一轮 critic 快速检查三件事：
+- 答案**是否合理**（量级、常识、有无 NaN/穿越）；
+- 关键数字**能否复现**（脚本一次运行）；
+- 交付表**是否填满**。
+
+通过即放行；不通过才回退修复。不做二级分级、不做交叉审计。
+
+## 阶段 5：串行写作 (Write)
+
+分两步，**不并行**：
+
+1. **建模报告**（`roles/modeling_reporter.md`）：产出 `.modeling/manuscript/modeling_report.md`——一页速览 + 逐问题要点 + 符号附录，给人看的交接依据。置 `STATUS: PENDING_REVIEW`，人工/Model-Critic 审批后进入下一步。
+2. **论文正文**（`roles/chapter_writer.md`）：基于已审批的报告，按题目问题顺序**逐段**写论文段落（`sections/*.tex`），再汇总用 Tectonic 编译为 `paper.pdf`——给评委看的成品。
+
+批判纪律（两条线都遵守）：
+- **反过拟合纪律**（保留）：数据驱动的结构选择（切点/分组/变量筛选）须有显著性检验或交叉验证证据；惩罚/正则超参数做灵敏度说明。
+- **竞赛合规红线**（保留）：匿名性、无目录页、摘要独立成页、主节"一、二、三、"编号；AI 使用声明如实填写。
+- **失败诚实**（保留）：求解不收敛、检验不显著、编译报错，如实写入，禁止静默跳过。
 
 ## 环境依赖
 
-- Python ≥3.10：numpy / pandas / scipy / statsmodels（scripts/ 工具箱）
-- Tectonic（LaTeX 总装编译）或 XeLaTeX + ctex 备选
-- 联网组两个角色需要网络搜索工具，断网环境下自动降级为纯离线四流派（在仲裁报告中注明联网组缺席）
+- Python ≥3.10：numpy / pandas / scipy / statsmodels
+- Tectonic（LaTeX 编译）或 XeLaTeX + ctex 备选
+- 联网组角色需要网络搜索工具，断网环境自动降级为离线流派
 
-## scripts/ 确定性算法工具箱
+## scripts/ 工具箱
 
 | 脚本 | 用途 | 关键接口 |
 | :--- | :--- | :--- |
-| `greedy_segmentation.py` | 有序特征异质性贪心切分（max-T 置换检验停止准则，控制假切点率） | `greedy_ordered_partition(df, split_col, x_col, y_col, random_state=...)` |
-| `lmm_variance_decomp.py` | LMM 拟合与方差分解（支持多随机效应，REML） | `fit_lmm_with_variance_decomposition(df, formula, group_col, re_formula)` |
-| `robust_qc_3zone.py` | 非参数质控 + MAD 质量指数 + 三区双阈值判定 | `non_parametric_quality_control(...)` / `compute_quality_index_and_zones(...)` |
-| `cluster_bootstrap.py` | 簇级 Bootstrap CI 与 MAD 噪声扰动分析（含失败率监控） | `cluster_bootstrap_ci(...)` / `mad_perturbation_analysis(...)` |
+| `health_check.py` | **健康与适配检测**：环境/库/工具 + scripts 冒烟 + HMML 检索→落盘→读回最小流程 + SKILL 引用完整性，首次运行调用 | `python scripts/health_check.py` |
+| `method_retrieve.py` | HMML 检索相关建模方法 → 落盘 `00_retrieval.json`（含归属流派 school），供 subagent 消费 | `retrieve_methods(problem_desc, top_k)` / `save_to_json(results, workdir)` / `load_from_json(workdir)` |
+| `greedy_segmentation.py` | 有序特征异质性贪心切分 | `greedy_ordered_partition(...)` |
+| `lmm_variance_decomp.py` | LMM 拟合与方差分解 | `fit_lmm_with_variance_decomposition(...)` |
+| `robust_qc_3zone.py` | 非参数质控 + 三区双阈值 | `non_parametric_quality_control(...)` |
+| `cluster_bootstrap.py` | 簇级 Bootstrap CI | `cluster_bootstrap_ci(...)` |
 
-调用约定：全部函数带 `random_state` 参数保证可复现；返回值中的 `warning` 字段非空时必须在审计报告中说明。
-
+调用约定：全部函数带 `random_state` 保证可复现；`warning` 字段非空时在报告中说明。
