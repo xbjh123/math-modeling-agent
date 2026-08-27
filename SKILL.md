@@ -140,6 +140,7 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 | :--- | :--- | :--- |
 | `health_check.py` | **健康与适配检测**：环境/库/工具 + scripts 冒烟 + HMML 检索→落盘→读回最小流程 + SKILL 引用完整性，首次运行调用 | `python scripts/health_check.py` |
 | `hitl_gate.py` | **人在回路门禁编排器**：主线程在 🔴/🟡 决策点等真人确认，落盘 `.modeling/hitl/`，返回审核结论注入后续阶段 | `gate(phase, question, items, suggestions, mode)` / `probe(...)`（benchmark 自动） |
+| `run_pipeline.py` | **主流程编排器**：把六阶段 + HITL 门禁串成可运行流水线，建 `.modeling/` 标准目录，落盘 `phase_status.json`，逐阶段推进并在门禁区等人 | `MathModelingPipeline(problem_path, workdir).run(mode='live'/'auto')` |
 | `method_retrieve.py` | HMML 检索相关建模方法 → 落盘 `00_retrieval.json`（含归属流派 school），供 subagent 消费 | `retrieve_methods(problem_desc, top_k)` / `save_to_json(results, workdir)` / `load_from_json(workdir)` |
 | `greedy_segmentation.py` | 有序特征异质性贪心切分 | `greedy_ordered_partition(...)` |
 | `lmm_variance_decomp.py` | LMM 拟合与方差分解 | `fit_lmm_with_variance_decomposition(...)` |

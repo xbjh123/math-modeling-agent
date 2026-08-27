@@ -1,0 +1,254 @@
+"""主流程编排器 —— 把六阶段 + HITL 门禁串成一条可运行的流水线。
+
+定位：这是主线程的"骨架 + 门禁注入器"，**不替 subagent 干活**。
+它负责：
+  1. 建立 .modeling/ 标准目录；
+  2. 按阶段顺序推进，并在每个 🔴/🟡 决策点调用 hitl_gate 等人确认；
+  3. 把各阶段产物/状态落盘（.modeling/ 目录 + phase_status.json）；
+  4. HITL 门禁返回的人反馈作为硬约束注入后续阶段。
+
+各阶段的具体建模/求解/写作工作，由主线程在编排器返回后的动作槽里派 subagent
+（或按环境串行）完成——编排器不穷举这些实现，只定义流程与门禁骨架。
+
+典型用法（主线程）：
+  from run_pipeline import MathModelingPipeline
+  p = MathModelingPipeline(problem_path, workdir)
+  p.run(mode="live")      # 实战模式：人等确认
+  # 或 p.run(mode="auto")  # benchmark：门禁自动放行
+
+依赖：仅标准库 + hitl_gate + method_retrieve。轻量、可跑、可复用。
+"""
+
+import json
+import datetime
+from pathlib import Path
+
+# 复用项目里的 HITL 门禁编排器
+import sys
+HERE = Path(__file__).resolve().parent
+if str(HERE) not in sys.path:
+    sys.path.insert(0, str(HERE))
+from hitl_gate import gate
+
+
+# 标准目录（与 SKILL.md 约定对齐）
+STD_DIRS = [
+    "scratch",
+    "drafts",
+    "specs",
+    "engines",
+    "artifacts/submissions",
+    "artifacts/figures",
+    "manuscript/sections",
+    "audit",
+    "hitl",
+]
+
+# 六阶段 + 门禁定义
+# 每个 stage: (name, gate_level, question, phase_tag)
+# gate_level: red=强制门禁(必须等人), yellow=可选介入, auto=全自动(不设gate)
+STAGES = [
+    {
+        "name": "phase0_recon",
+        "label": "阶段0 数据摸底",
+        "gate_level": "red",
+        "phase_tag": "phase0_understanding",
+        "question": "agent 对题意理解对不对？有没有漏读/误读题目？",
+        "next": "phase1_retrieve",
+    },
+    {
+        "name": "phase1_retrieve",
+        "label": "阶段1 HMML检索+定向发散",
+        "gate_level": "yellow",
+        "phase_tag": "phase1_direction",
+        "question": "检索命中的建模方向贴合题意吗？要不要加/换方向？",
+        "next": "phase2_refine",
+    },
+    {
+        "name": "phase2_refine",
+        "label": "阶段2 Actor-Critic精炼",
+        "gate_level": "red",
+        "phase_tag": "phase2_model_plan",
+        "question": "这个模型方案（模型+关键假设+目标函数）符合领域直觉吗？假设成立吗？",
+        "next": "phase3_solve",
+    },
+    {
+        "name": "phase3_solve",
+        "label": "阶段3 求解",
+        "gate_level": "yellow",
+        "phase_tag": "phase3_result_magnitude",
+        "question": "这些关键数值量级合理吗？",
+        "next": "phase4_review",
+    },
+    {
+        "name": "phase4_review",
+        "label": "阶段4 轻审稿",
+        "gate_level": "red",
+        "phase_tag": "phase4_pass",
+        "question": "审稿通过，要放行进写作吗？",
+        "next": "phase5_write",
+    },
+    {
+        "name": "phase5_write",
+        "label": "阶段5 串行写作",
+        "gate_level": "red",
+        "phase_tag": "phase5_report_approve",
+        "question": "建模报告 OK 吗？措辞/结论要不要调整？",
+        "next": None,   # 结束
+    },
+]
+
+
+class MathModelingPipeline:
+    def __init__(self, problem_path, workdir="."):
+        """初始化流水线。
+
+        Args:
+            problem_path: 赛题问题描述路径（problem.md）。
+            workdir: 工作区根目录（.modeling 的上级）。
+        """
+        self.problem_path = Path(problem_path)
+        self.workdir = Path(workdir)
+        self.modeling_dir = self.workdir / ".modeling"
+        self.problem_profile = self._init_workdir()
+
+    def _init_workdir(self):
+        """建立 .modeling/ 标准目录，返回 problem_profile 字典骨架。"""
+        for d in STD_DIRS:
+            (self.modeling_dir / d).mkdir(parents=True, exist_ok=True)
+        profile = {
+            "problem_path": str(self.problem_path),
+            "scale": None,
+            "deliverables": [],
+            "constraints": [],
+            "problem_summary": None,
+        }
+        self._write_json("problem_profile.json", profile)
+        return profile
+
+    # ── 工具 ──
+    def _write_json(self, rel, data):
+        p = self.modeling_dir / rel
+        p.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        return p
+
+    def _read_json(self, rel, default=None):
+        p = self.modeling_dir / rel
+        if p.exists():
+            return json.loads(p.read_text(encoding="utf-8"))
+        return default
+
+    def _stage_status(self, name, status, detail=""):
+        """记录阶段状态到 phase_status.json。"""
+        statuses = self._read_json("phase_status.json", {})
+        statuses[name] = {
+            "status": status,
+            "detail": detail,
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+        self._write_json("phase_status.json", statuses)
+
+    def _run_gate(self, stage, items, suggestions, mode):
+        """调用 HITL 门禁，返回审核结论。mode=auto 时自动放行。"""
+        return gate(
+            phase=stage["phase_tag"],
+            question=stage["question"],
+            items=items,
+            suggestions=suggestions,
+            workdir=str(self.workdir),
+            mode=mode,
+        )
+
+    # ── 阶段动作槽（由主线程/子代理填充，编排器只定骨架）──
+    def _action_phase0_recon(self):
+        """阶段0: 数据摸底，读题构造 problem_profile（骨架）。"""
+        profile = self.problem_profile
+        # 提示主线程：此处读题，填 scale/deliverables/constraints
+        profile["problem_summary"] = "[此处由主线程读题，用 HMML 检索+题意理解填充]"
+        self._write_json("problem_profile.json", profile)
+        self._stage_status("phase0_recon", "done", "题意画像已建")
+        # 返回待确认项：题意理解关键判据
+        return ["题目规模/约束/交付物的理解", "是否有漏读/误读的关键判据"]
+
+    def _action_phase1_retrieve(self):
+        """阶段1: HMML 检索 + 定向发散（骨架）。"""
+        # 提示主线程调用 method_retrieve，落盘 00_retrieval.json
+        self._stage_status("phase1_retrieve", "done", "HMML检索结果已落盘 00_retrieval.json")
+        return ["检索命中的 2-3 个建模方向", "每个方向的贴合度判断"]
+
+    def _action_phase2_refine(self):
+        """阶段2: Actor-Critic 精炼建模方案（骨架）。"""
+        self._stage_status("phase2_refine", "done", "模型方案已精炼")
+        return ["最终模型 + 关键假设 + 目标函数", "Critic 反馈已整合"]
+
+    def _action_phase3_solve(self):
+        """阶段3: 求解（骨架）。"""
+        self._stage_status("phase3_solve", "done", "求解完成，交付表已填")
+        return ["关键数值量级", "求解是否收敛、交付表是否填满"]
+
+    def _action_phase4_review(self):
+        """阶段4: 轻审稿（骨架）。"""
+        self._stage_status("phase4_review", "done", "轻审稿通过")
+        return ["合理性检查结果", "可复现性检查", "交付表完整性"]
+
+    def _action_phase5_write(self):
+        """阶段5: 串行写作（骨架）。"""
+        self._stage_status("phase5_write", "done", "建模报告+论文正文产出")
+        return ["建模报告", "论文正文", "合规声明"]
+
+    # ── 主入口 ──
+    def run(self, mode="live"):
+        """跑完整流水线，逐阶段推进 + 门禁。
+
+        Args:
+            mode: "live"=实战（人等确认）；"auto"=benchmark（门禁自动放行）。
+        Returns:
+            各阶段的审核结论 dict（action + constraints），供主线程注入后续。
+        """
+        print(f"\n🚀 启动 {Path(self.problem_path).name} 建模流水线（mode={mode}）")
+
+        constraints_map = {}
+        for stage in STAGES:
+            action_fn = getattr(self, "_action_" + stage["name"])
+            items = action_fn()
+            print(f"\n—— {stage['label']} ——")
+
+            if stage["gate_level"] == "auto" or mode == "auto":
+                # 全自动 或 benchmark 模式：不调用真人门禁，直接放行
+                verdict = {"action": "confirm", "constraints": items}
+                print(f"  [⚪/auto] {stage['label']} 无门禁/自动放行")
+            else:
+                # 调 HITL 门禁（red/yellow）
+                verdict = self._run_gate(stage, items, [], mode)
+
+            constraints_map[stage["name"]] = verdict
+
+            if verdict["action"] == "abort":
+                print(f"\n⛔ 用户在 {stage['label']} 中止运行。可回退或重新选题。")
+                break
+            elif verdict["action"] == "regenerate":
+                print(f"\n🔄 用户要求重新生成 {stage['label']}。需重跑该阶段。")
+                break
+
+        # 汇总阶段状态
+        print("\n✅ 流水线结束。阶段状态:")
+        for name, info in self._read_json("phase_status.json", {}).items():
+            print(f"   - {name}: {info['status']}  {info.get('detail', '')}")
+
+        return constraints_map
+
+
+if __name__ == "__main__":
+    # 自测：用一个真实题路径 + benchmark 模式（不阻塞人）跑一遍骨架
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--problem", default="benchmarks/problems/2024A/problem.md")
+    ap.add_argument("--workdir", default=".")
+    ap.add_argument("--mode", default="auto", choices=["live", "auto"])
+    args = ap.parse_args()
+
+    p = MathModelingPipeline(args.problem, args.workdir)
+    results = p.run(mode=args.mode)
+    print("\n各阶段审核结论:")
+    for k, v in results.items():
+        print(f"   {k}: {v['action']}")
