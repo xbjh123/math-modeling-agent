@@ -39,7 +39,7 @@ def test_contains_keywords(repo_root):
 
 def test_contains_verified_comment(repo_root):
     tex = _load_template(repo_root)
-    assert re.search(r"Verified", tex), "模板应含 Verified 编译验证注释行"
+    assert re.search(r"V2|blueprint|paper_blueprint|参考文献", tex), "模板应含 V2 重做标记 / blueprint 或参考文献骨架"
 
 
 def test_all_input_sections_exist(repo_root):
@@ -47,10 +47,12 @@ def test_all_input_sections_exist(repo_root):
     sections_dir = Path(repo_root) / "templates" / "sections"
 
     inputs = re.findall(r"\\input\{([^}]+)\}", tex)
-    assert len(inputs) == 5, f"预期 5 个 \\input，实际 {len(inputs)}: {inputs}"
+    # V2 模板为“问题数可配置”。首末两章（01_intro_assump / 0X_sensitivity_conclusion）
+    # 确定存在并被 \input；问题章（02_problem1..）由 template_problem_chapter 按题复制生成，
+    # 在模板主文件里是注释化占位，故有效 \input 至少 2 个（首末章）。
+    assert len(inputs) >= 2, f"预期至少 2 个 \\input（首末章），实际 {len(inputs)}: {inputs}"
 
     for ref in inputs:
-        # 形如 "sections/01_intro_eda.tex"，从 templates/ 解析相对路径
         rel = Path(ref)
         target = sections_dir / rel.name
         assert target.is_file(), (
@@ -58,11 +60,11 @@ def test_all_input_sections_exist(repo_root):
 
 
 def test_sections_dir_placeholder_files(repo_root):
-    """确保 sections/ 目录确实是 5 个占位文件相对齐。"""
+    """确保 sections/ 目录对齐 V2 通用结构：首章 + 问题章模板 + 末章。"""
     sections_dir = Path(repo_root) / "templates" / "sections"
     files = sorted(p.name for p in sections_dir.glob("*.tex"))
-    expected = {
-        "01_intro_eda.tex", "02_problem1_milp.tex", "03_problem2_cvar.tex",
-        "04_problem3_corr.tex", "05_sensitivity_app.tex",
-    }
-    assert set(files) == expected, f"sections 文件不齐: {files}"
+    # 首末两章 + 通用问题章模板必须存在（问题章由 template_problem_chapter 复制生成）
+    assert "01_intro_assump.tex" in files, "缺首章占位 01_intro_assump.tex"
+    assert "07_sensitivity_conclusion.tex" in files, "缺末章占位 07_sensitivity_conclusion.tex"
+    assert "template_problem_chapter.tex" in files, "缺通用问题章模板 template_problem_chapter.tex"
+    # 不再断言固定 5 个旧题型占位；允许模板按题生成问题章文件

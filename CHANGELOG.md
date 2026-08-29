@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed (2026-08-29 论文编写层架构重做)
+
+- **论文编写从"串行写作"重构为"规划→写作→结构审校"三段式**（对齐 2025A 对比国奖论文 A196 的差距归因：写作层三处结构性缺失——每问缺策略规律提炼段/缺参考文献节/缺精确归约定理）：
+  - **新增"论文结构蓝图"层**：`references/paper_structure.md` 定义 `paper_blueprint.md` 固定格式（全篇章节树 + 每问固定六项子结构：模型/求解/结果/**策略规律**/亮点/判据示意 + 参考文献席 + 定理/命题清单 + 跨问递进承接句 + 结构自检表）。**没有蓝图不进入写作**。
+  - **新增 `roles/paper_planner.md`（5b-1 蓝图规划）**：写作前产出 `.modeling/manuscript/blueprints/paper_blueprint.md`，把"论文必须有什么"从 chapter_writer 的一行提示词固化为一整张装配图。
+  - **改造 `roles/chapter_writer.md`（5b-2 正文写作）**：从"写段落"升级为"对照蓝图填段"，A196 三优势（策略规律/参考文献/判据归约）从提示词变成**必填字段**；参考文献**禁编造**，来源以蓝图参考文献席为准。
+  - **新增 `roles/paper_structural_reviewer.md`（5b-3 结构审校，🔴 门禁）**：对照蓝图逐项核对兑现度，缺一项即回退重写，**不带着缺结构进入最终交付**；与 model_critic（数值对错）职责分离。
+  - **重做 `templates/main_template.tex` + `templates/sections/`**：章节化名不再硬编码题型（milp/cvar/corr），改为通用占位（`01_intro_assump` / `template_problem_chapter` / `07_sensitivity_conclusion`），章节树与 blueprint 对齐；新增"参考文献"节骨架。
+  - **`scripts/run_pipeline.py`**：`manuscript/blueprints` 入 `STD_DIRS`；`phase5_write` 拆为 `phase5a_report`/`phase5b_plan`/`phase5c_write`/`phase5d_structural` 四动作槽，门禁与目录与 SKILL 阶段 5 对齐。
+  - **`SKILL.md` 阶段 5**：改为"建模报告 → 论文蓝图 → 论文正文 → 结构审校"四步（原两步），批判纪律新增 **A196 对比回灌**三条。
+- 说明：本次改动**只动了仓库内角色/模板/流程**，未改 Hermes 侧 `math-modeling` skill 载体；下次跑题自动走新架构。
+
+### Fixed (2026-08-28 2024A 回灌恢复)
+
+- **以轻量形式恢复被精简重构（0746c63）随重型审计一并裁掉的 2024A 回灌条款**（来源题目与证据：`benchmarks/runs/2024A/20260823_first_baseline/human_comparison.md` 差异归因表 #1/#4、`score.md` 首轮发现 #3；原条款见提交 1121054）：
+  - `roles/model_critic.md` 新增两条强制回灌纪律——**答案共识性校验**（对照 `reference_answers.json` 共识值或第二种独立方法交叉验证，自洽≠正确）与**约束满足性数值扫描**（约束易违背处独立抽查，不只信引擎自报的满足标志）；"不做的"清单同步改为不做*全量*逐点交叉审计。
+  - `roles/deep_formalizer.md` 判据溯源从"尽量"升回**强制**（引题面原文 + 多解读显式讨论），新增**理论性质必须尝试、不适用须说明**；仍不做 KKT/公理化推导，维持精简取向。
+  - `SKILL.md` 阶段 2 / 阶段 4 措辞同步（轻审稿三件事 → 四件事）。
+  - offline_optimization / offline_mechanistic 两派回灌条款与 `benchmarks/problems/2024A/reference_answers.json`、`auto_checks.py` answer_check 已在 1121054 / 0746c63 落地，本轮核验未动。
+
 ### Added (2026-08 精简重构)
 
 - **第 7 个探索流派**：`roles/offline_prediction_ml.md`（预测/机器学习派），补全 HMML 方法覆盖（ARIMA/灰色GM/SVM/K-means/PCA/Boosting 等）。

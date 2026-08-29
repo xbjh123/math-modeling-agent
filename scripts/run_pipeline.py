@@ -40,6 +40,7 @@ STD_DIRS = [
     "artifacts/submissions",
     "artifacts/figures",
     "manuscript/sections",
+    "manuscript/blueprints",
     "audit",
     "hitl",
 ]
@@ -86,14 +87,38 @@ STAGES = [
         "gate_level": "red",
         "phase_tag": "phase4_pass",
         "question": "审稿通过，要放行进写作吗？",
-        "next": "phase5_write",
+        "next": "phase5a_report",
     },
     {
-        "name": "phase5_write",
-        "label": "阶段5 串行写作",
+        "name": "phase5a_report",
+        "label": "阶段5a 建模报告",
         "gate_level": "red",
         "phase_tag": "phase5_report_approve",
         "question": "建模报告 OK 吗？措辞/结论要不要调整？",
+        "next": "phase5b_plan",
+    },
+    {
+        "name": "phase5b_plan",
+        "label": "阶段5b-1 论文蓝图规划",
+        "gate_level": "yellow",
+        "phase_tag": "phase5_blueprint",
+        "question": "论文结构蓝图（章节树 + 每问六项子结构 + 参考文献席）符合预期吗？",
+        "next": "phase5c_write",
+    },
+    {
+        "name": "phase5c_write",
+        "label": "阶段5b-2 论文正文写作",
+        "gate_level": "red",
+        "phase_tag": "phase5_writing",
+        "question": "论文正文按蓝图写好并编译通过了吗？",
+        "next": "phase5d_structural",
+    },
+    {
+        "name": "phase5d_structural",
+        "label": "阶段5b-3 结构审校",
+        "gate_level": "red",
+        "phase_tag": "phase5_structural_review",
+        "question": "结构审校通过了吗？（每问策略规律/参考文献/定理清单/递进承接/匿名）",
         "next": None,   # 结束
     },
 ]
@@ -191,10 +216,25 @@ class MathModelingPipeline:
         self._stage_status("phase4_review", "done", "轻审稿通过")
         return ["合理性检查结果", "可复现性检查", "交付表完整性"]
 
-    def _action_phase5_write(self):
-        """阶段5: 串行写作（骨架）。"""
-        self._stage_status("phase5_write", "done", "建模报告+论文正文产出")
-        return ["建模报告", "论文正文", "合规声明"]
+    def _action_phase5a_report(self):
+        """阶段5a: 建模报告（骨架）。"""
+        self._stage_status("phase5a_report", "done", "建模报告产出")
+        return ["建模报告", "一页速览 + 逐问题要点 + 符号附录"]
+
+    def _action_phase5b_plan(self):
+        """阶段5b-1: 论文蓝图规划（骨架）。"""
+        self._stage_status("phase5b_plan", "done", "论文结构蓝图已落盘 blueprints/paper_blueprint.md")
+        return ["全篇章节树", "每问六项子结构（模型/求解/结果/策略规律/亮点/判据示意）", "参考文献席", "定理/命题清单", "结构自检表"]
+
+    def _action_phase5c_write(self):
+        """阶段5b-2: 论文正文写作（骨架）。"""
+        self._stage_status("phase5c_write", "done", "论文正文写好并编译通过")
+        return ["论文正文 sections/*.tex", "Tectonic 编译通过 paper.pdf"]
+
+    def _action_phase5d_structural(self):
+        """阶段5b-3: 结构审校（骨架）。"""
+        self._stage_status("phase5d_structural", "done", "结构审校通过（蓝图兑现度核对）")
+        return ["每问策略规律段", "参考文献节（真实文献+AI披露）", "定理清单兑现", "跨问递进承接", "匿名合规"]
 
     # ── 主入口 ──
     def run(self, mode="live"):

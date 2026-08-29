@@ -98,7 +98,7 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 2. **Critic** 审稿 agent：评估该方案质量，给出**针对性反馈**（哪里过度简化、哪里假设不稳、哪里能加分）。
 3. **Actor 修正**：整合 critic 反馈，迭代 **2 轮**收敛，产出 `.modeling/specs/01_math_formulation.md`，只含：符号表、闭式目标函数、关键假设。
 4. **🔴 人等确认模型方案**：把最终模型 + 关键假设 + 目标函数展示给人，问——"这个模型选择符合领域直觉吗？假设成立吗？"人确认后进入阶段 3。
-5. 不做公理化 KKT / 凸性 / 极值证明。**理论证明只在确实需要证明最优性时才做**（如"调头曲线长度不变"这类硬核题）。
+5. 不做公理化 KKT / 凸性推导。**理论性质必须尝试**：对核心对象证明至少一条不变性 / 单调性 / 上下界 / 唯一性，不适用须显式说明已尝试路径、禁止静默跳过（"调头曲线长度不变"这类证明是人工优秀论文的标配）。
 
 ## 阶段 3：求解 (Solve) — 🟡 可选介入
 
@@ -109,21 +109,30 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 
 ## 阶段 4：轻审稿 (Quick Review) — 🔴 强制门禁
 
-一轮 critic 快速检查三件事：
-- 答案**是否合理**（量级、常识、有无 NaN/穿越）；
+一轮 critic 快速检查四件事：
+- 答案**是否合理且与参照一致**（量级、常识、有无 NaN/穿越；数值题对照 `reference_answers.json` 共识值或用独立方法交叉验证——**自洽≠正确**）；
+- 含路径/几何/过程约束时，在**约束易违背处独立数值抽查**（不只信引擎自报的满足标志）；
 - 关键数字**能否复现**（脚本一次运行）；
 - 交付表**是否填满**。
 
 **🔴 人等确认放行**：把审稿结论展示给人，问——"要放行进写作吗？"人确认后进入阶段 5；不通过才回退修复。不做二级分级、不做交叉审计。
 
-## 阶段 5：串行写作 (Write) — 🔴 强制门禁
+## 阶段 5：论文编写 (Write) — 🔴 强制门禁
 
-分两步，**不并行**：
+分三步，**不并行**：
 
 1. **建模报告**（`roles/modeling_reporter.md`）：产出 `.modeling/manuscript/modeling_report.md`——一页速览 + 逐问题要点 + 符号附录，给人看的交接依据。置 `STATUS: PENDING_REVIEW`，**🔴 等人审批**（人工/Model-Critic）后进入下一步。
-2. **论文正文**（`roles/chapter_writer.md`）：基于已审批的报告，按题目问题顺序**逐段**写论文段落（`sections/*.tex`），再汇总用 Tectonic 编译为 `paper.pdf`——给评委看的成品。
 
-批判纪律（两条线都遵守）：
+2. **论文蓝图**（`roles/paper_planner.md`，阶段 5b-1）：在写任何段落**之前**，基于已审批报告产出 `.modeling/manuscript/blueprints/paper_blueprint.md`——整篇论文的**装配图**。把"论文必须有什么"固化成结构化字段：全篇章节树 + 每问固定六项子结构（模型/求解/结果/**策略规律**/亮点/判据示意）+ 参考文献席 + 定理/命题清单 + 跨问递进承接句 + 结构自检表。**没有蓝图不进入写作**。格式见 `references/paper_structure.md`。
+
+3. **论文正文**（`roles/chapter_writer.md`，阶段 5b-2）：基于蓝图，按题目问题顺序**逐段**写论文段落（`sections/*.tex`），每段对照蓝图子结构填写，再汇总用 Tectonic 编译为 `paper.pdf`——给评委看的成品。
+
+4. **结构审校**（`roles/paper_structural_reviewer.md`，阶段 5b-3，🔴 门禁）：对照蓝图**逐项核对兑现度**——每问策略规律段/参考文献节/定理清单/递进承接/匿名合规是否齐全；缺一项即**回退**重写，**不得带着缺结构进入最终交付**。此环节只校验"结构全不全"，不覆盖 model_critic 的"数值对不对"（两者独立）。
+
+   结构审校的同时，**数值审校归阶段 4 的 model_critic**：若阶段 4 已做，本阶段不再重复；若数值在写作中修改，需回阶段 4 复核数值。
+
+批判纪律（写作两条线都遵守，沿用并扩展）：
+- **A196 对比回灌（2025A）**：每问结果后必须含"策略规律提炼"段（从最优解回提炼可迁移规律，非复述数值）；正文后必须设"参考文献"节（真实文献 2-4 条 + AI 工具使用披露，**禁编造**）；能归约的判据优先用"精确归约"型定理（如圆柱全遮蔽归约为两底面圆周），把采样近似变精确。
 - **反过拟合纪律**（保留）：数据驱动的结构选择（切点/分组/变量筛选）须有显著性检验或交叉验证证据；惩罚/正则超参数做灵敏度说明。
 - **竞赛合规红线**（保留）：匿名性、无目录页、摘要独立成页、主节"一、二、三、"编号；AI 使用声明如实填写。
 - **失败诚实**（保留）：求解不收敛、检验不显著、编译报错，如实写入，禁止静默跳过。
@@ -142,6 +151,8 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 | `hitl_gate.py` | **人在回路门禁编排器**：主线程在 🔴/🟡 决策点等真人确认，落盘 `.modeling/hitl/`，返回审核结论注入后续阶段 | `gate(phase, question, items, suggestions, mode)` / `probe(...)`（benchmark 自动） |
 | `run_pipeline.py` | **主流程编排器**：把六阶段 + HITL 门禁串成可运行流水线，建 `.modeling/` 标准目录，落盘 `phase_status.json`，逐阶段推进并在门禁区等人 | `MathModelingPipeline(problem_path, workdir).run(mode='live'/'auto')` |
 | `method_retrieve.py` | HMML 检索相关建模方法 → 落盘 `00_retrieval.json`（含归属流派 school），供 subagent 消费 | `retrieve_methods(problem_desc, top_k)` / `save_to_json(results, workdir)` / `load_from_json(workdir)` |
+| `fig_helpers.py` | **论文配图统一工具库**：配色/样式/导出规范（`PALETTE`+`setup_mpl`+`style_ax`+`fig_save`），杜绝 tab:* 默认色；几何/数值图必须用求解引擎真实数据 | 配色见 `references/paper_figures.md`；`palette(name)` / `fig_save(fig, path)` |
+| `fig_paper_2025A.py` | **2025A 论文配图重画**：用 fig_helpers 重画 fig1 场景俯视图/fig4 判据机理图（修正目标、去撞色、补烟幕域与视线锥角） | `python scripts/fig_paper_2025A.py` |
 | `greedy_segmentation.py` | 有序特征异质性贪心切分 | `greedy_ordered_partition(...)` |
 | `lmm_variance_decomp.py` | LMM 拟合与方差分解 | `fit_lmm_with_variance_decomposition(...)` |
 | `robust_qc_3zone.py` | 非参数质控 + 三区双阈值 | `non_parametric_quality_control(...)` |
