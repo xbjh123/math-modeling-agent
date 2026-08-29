@@ -45,3 +45,11 @@ Thumbs.db
 # 具体的真题运行产物（每次跑题变化，不入库；含 _runN 变体）
 benchmarks/problems/*/.modeling/
 benchmarks/problems/*/.modeling*/
+benchmarks/runs/**/.modeling/
+benchmarks/runs/**/.modeling*/
+# 具体 run 目录（含日期戳，如 20260828_xxx）为运行产物，整体忽略
+benchmarks/runs/**/*_run*/
+benchmarks/runs/**/20*/
+# TikZ 编译生成的 PDF/PNG 为产物（.tex 源码入库即可）
+templates/tikz/*.pdf
+templates/tikz/*.png
