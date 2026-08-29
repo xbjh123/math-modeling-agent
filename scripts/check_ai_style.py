@@ -214,10 +214,10 @@ def main():
         if len([v for v in counts.values() if v > 0]) > 1:
             print("  → 提示: 同概念可能多术语混用，核对是否需统一")
 
-    # 4) 方括号标签专检
-    bracket = re.findall(r"\[[^\]]{2,10}\]", all_text)
+    # 4) 方括号标签专检（只抓 \subsection{[X]} 这种标题标签，不误捕数学下标[121,240]/TikZ[box]/数值区间[18,29]）
+    bracket = re.findall(r"\\subsection\*?\{\[[^\]\n]{2,10}\]", all_text)
     if bracket:
-        print(f"\n[方括号标签] {len(bracket)} 处 → 应改为连贯段落，标签并入小标题")
+        print(f"\n[方括号标签] {len(bracket)} 处 → 应改为连贯语义化小标题（如 \\subsection{模型建立}），标签并入小标题")
 
     print("\n" + "=" * 60)
     return 0
