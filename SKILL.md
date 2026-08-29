@@ -67,9 +67,9 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 | 🟡 可选介入 | agent 给出建议，人可一键通过/修改 | 同上 |
 | ⚪ 全自动 | 人默认不介入 | 直接放行 |
 
-**实现位置**：人在回路由主线程在**编排层**做（subagent 独立上下文、看不到人）。每次人介入，主线程展示"待确认项 + agent 建议"→ 人反馈 → 落盘 `.modeling/hitl/<phase>_feedback.json`（**当次生效，不沉淀回灌**）→ 反馈作为硬约束注入后续阶段。
+**实现位置**：人工审校由**主 agent 在对话流中执行**（角色式提示词注入，2026-08-29 重构，非 subagent）。主 agent 读到门禁标记（`.modeling/hitl/<phase>_gate.md` + `phase_status.json` 的 `waiting_human`）→ 停下流水线 → 读出待审项 → 在对话中提问（5 个动作）→ **等用户回复**（强约束，不自答）→ 按动作处理 → 落盘 `.modeling/hitl/<phase>_feedback.json`（当次生效，不沉淀回灌）。详见 `roles/hitl_reviewer.md` + `references/hitl_prompt_design.md`。**auto 模式也先注入审校提醒**（人工必审），仅用户缺席才降级 confirm。
 
-**模式**：实战模式 🔴 全开；benchmark 模式门禁自动放行（人缺席也能出分）。
+**模式**：实战模式 🔴 全开；benchmark 模式先注入审校提醒，用户缺席才降级 confirm（人缺席也能出分）。
 
 ## 阶段 0：数据摸底 (Brief Recon) — 🔴 强制门禁
 
@@ -119,7 +119,7 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 
 ## 阶段 5：论文编写 (Write) — 🔴 强制门禁
 
-分三步，**不并行**：
+分四步，**不并行**：
 
 1. **建模报告**（`roles/modeling_reporter.md`）：产出 `.modeling/manuscript/modeling_report.md`——一页速览 + 逐问题要点 + 符号附录，给人看的交接依据。置 `STATUS: PENDING_REVIEW`，**🔴 等人审批**（人工/Model-Critic）后进入下一步。
 
@@ -148,11 +148,9 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 | 脚本 | 用途 | 关键接口 |
 | :--- | :--- | :--- |
 | `health_check.py` | **健康与适配检测**：环境/库/工具 + scripts 冒烟 + HMML 检索→落盘→读回最小流程 + SKILL 引用完整性，首次运行调用 | `python scripts/health_check.py` |
-| `hitl_gate.py` | **人在回路门禁编排器**：主线程在 🔴/🟡 决策点等真人确认，落盘 `.modeling/hitl/`，返回审核结论注入后续阶段 | `gate(phase, question, items, suggestions, mode)` / `probe(...)`（benchmark 自动） |
-| `run_pipeline.py` | **主流程编排器**：把六阶段 + HITL 门禁串成可运行流水线，建 `.modeling/` 标准目录，落盘 `phase_status.json`，逐阶段推进并在门禁区等人 | `MathModelingPipeline(problem_path, workdir).run(mode='live'/'auto')` |
+| `run_pipeline.py` | **主流程编排器**：九阶段（0-5 含 5a/b） + HITL 门禁，建 `.modeling/` 标准目录、落盘 `phase_status.json`；门禁阶段生成 `.modeling/hitl/<phase>_gate.md` 待审内容 + 标记 `waiting_human`，交主 agent（按 `roles/hitl_reviewer.md`）在对话流中问人 | `MathModelingPipeline(problem_path, workdir).run(mode='live'/'auto')` |
 | `method_retrieve.py` | HMML 检索相关建模方法 → 落盘 `00_retrieval.json`（含归属流派 school），供 subagent 消费 | `retrieve_methods(problem_desc, top_k)` / `save_to_json(results, workdir)` / `load_from_json(workdir)` |
 | `fig_helpers.py` | **论文配图统一工具库**：配色/样式/导出规范（`PALETTE`+`setup_mpl`+`style_ax`+`fig_save`），杜绝 tab:* 默认色；几何/数值图必须用求解引擎真实数据 | 配色见 `references/paper_figures.md`；`palette(name)` / `fig_save(fig, path)` |
-| `fig_paper_2025A.py` | **2025A 论文配图重画**：用 fig_helpers 重画 fig1 场景俯视图/fig4 判据机理图（修正目标、去撞色、补烟幕域与视线锥角） | `python scripts/fig_paper_2025A.py` |
 | `greedy_segmentation.py` | 有序特征异质性贪心切分 | `greedy_ordered_partition(...)` |
 | `lmm_variance_decomp.py` | LMM 拟合与方差分解 | `fit_lmm_with_variance_decomposition(...)` |
 | `robust_qc_3zone.py` | 非参数质控 + 三区双阈值 | `non_parametric_quality_control(...)` |

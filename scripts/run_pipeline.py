@@ -28,7 +28,6 @@ import sys
 HERE = Path(__file__).resolve().parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
-from hitl_gate import gate
 
 
 # 标准目录（与 SKILL.md 约定对齐）
@@ -173,16 +172,43 @@ class MathModelingPipeline:
         }
         self._write_json("phase_status.json", statuses)
 
-    def _run_gate(self, stage, items, suggestions, mode):
-        """调用 HITL 门禁，返回审核结论。mode=auto 时自动放行。"""
-        return gate(
-            phase=stage["phase_tag"],
-            question=stage["question"],
-            items=items,
-            suggestions=suggestions,
-            workdir=str(self.workdir),
-            mode=mode,
-        )
+    def _stage_gate(self, stage, items, suggestions, mode):
+        """生成 HITL 待审内容（不再等 stdin），返回"待用户审校"的 verdict。
+
+        语义：把 gate 的产物从"脚本等 input()"改为"生成待审文件 + 标记 waiting_human"，
+        由主 agent（读 roles/hitl_reviewer.md）在对话流中主动停下问用户。
+        - 落盘 .modeling/hitl/<phase>_gate.md（人可读待审内容）
+        - phase_status.json 标记 waiting_human（信号给主 agent）
+        - 返回 verdict={action:'awaiting_human', ...}，主 agent 据此停下等用户。
+        """
+        phase = stage["phase_tag"]
+        items = items or []
+        suggestions = suggestions or []
+
+        # 人可读的待审内容
+        lines = [f"# {stage['label']} · 人工审校"]
+        lines.append(f"\n> 门禁标识: {phase}  |  档位: {stage['gate_level']}")
+        lines.append(f"\n## 待确认项")
+        for it in items:
+            lines.append(f"- {it}")
+        if suggestions:
+            lines.append(f"\n## Agent 建议（供参考）")
+            for s in suggestions:
+                lines.append(f"- {s}")
+        lines.append(f"\n## 请选择动作")
+        lines.append("confirm / edit / regenerate / skip / abort（或直接输入你的修改意见）")
+        gate_path = self.modeling_dir / "hitl" / f"{phase}_gate.md"
+        gate_path.parent.mkdir(parents=True, exist_ok=True)
+        gate_path.write_text("\n".join(lines), encoding="utf-8")
+
+        # 标记等待人工
+        self._stage_status(stage["name"], "waiting_human",
+                           f"待人工审校（{phase}），详见 {gate_path.name}")
+
+        # 返回 verdict：主 agent 看到 awaiting_human 即停下问用户
+        return {"action": "awaiting_human", "constraints": items,
+                "gate_file": str(gate_path), "phase": phase,
+                "mode": mode, "stage_label": stage["label"]}
 
     # ── 阶段动作槽（由主线程/子代理填充，编排器只定骨架）──
     def _action_phase0_recon(self):
@@ -253,13 +279,24 @@ class MathModelingPipeline:
             items = action_fn()
             print(f"\n—— {stage['label']} ——")
 
-            if stage["gate_level"] == "auto" or mode == "auto":
-                # 全自动 或 benchmark 模式：不调用真人门禁，直接放行
-                verdict = {"action": "confirm", "constraints": items}
-                print(f"  [⚪/auto] {stage['label']} 无门禁/自动放行")
+            if stage["gate_level"] == "auto":
+                # ⚪ 全自动（确定性环节）：不用人，直接放行
+                verdict = {"action": "confirm", "constraints": items,
+                           "stage": stage["name"]}
+                print(f"  [⚪] {stage['label']} 确定性环节，自动放行")
             else:
-                # 调 HITL 门禁（red/yellow）
-                verdict = self._run_gate(stage, items, [], mode)
+                # 🔴/🟡 门禁：生成待审内容 + 标记 waiting_human，交主 agent 问人。
+                # auto 模式下仍先注入审校提醒（人工必审），但标记可降级（用户缺席时 confirm）。
+                verdict = self._stage_gate(stage, items, [], mode)
+                verdict["stage"] = stage["name"]
+                # auto 模式下允许用户在缺席时降级为确认（保住 benchmark 出分）
+                verdict["allow_degrade"] = (mode == "auto")
+                print(f"  [{stage['gate_level']}] {stage['label']} 已写入待审内容，等待人工审校"
+                      + ("（auto: 用户缺席可降级 confirm）" if mode == "auto" else ""))
+                if mode == "auto":
+                    # 透传一条审校提醒给主 agent（README 注释：主 agent 读到 awaiting_human 必须先尝试问人）
+                    verdict["hint"] = ("即使 auto 模式，也请先向用户注入本次审校提醒；"
+                                       "仅当用户明确缺席/无回复时才降级为 confirm。")
 
             constraints_map[stage["name"]] = verdict
 

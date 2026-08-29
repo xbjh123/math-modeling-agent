@@ -44,20 +44,34 @@
 | **实战模式** | 🔴 全开，人在用 | 人全程把关关键决策点，参赛/交付场景 |
 | **benchmark 模式** | 门禁自动放行 | 人缺席也能跑完出分，评测驱动迭代不被人的介入卡住 |
 
-## 五、实现位置：主线程编排层（不是 subagent 内部）
+## 五、实现位置：主 agent 对话流（提示词注入式，2026-08-29 重构）
 
-人在回路必须由**主线程在编排层**做，不能塞进 subagent（subagent 独立上下文、看不到人）。
+> **演进**：原方案主线程用 `hitl_gate.py` 脚本等 `input()`。但 agent 编排（ZCode/Hermes）不是交互式 CLI，无 stdin 可收真人输入，`mode='live'` 会阻塞、`mode='auto'` 直接静默 confirm——**人工审校从没真正跑起来**。故废弃脚本等待式，改为**角色式提示词注入**（详见 `references/hitl_prompt_design.md` + `roles/hitl_reviewer.md`）。
 
-主线程流程（示意）：
+人在回路必须由**主 agent 在编排层**做，不能塞进 subagent（subagent 独立上下文、看不到人）。机制：
 
 ```
-Phase 0 → [🔴 人等确认] → Phase 1 → [🟡] → Phase 2 → [🔴 人等确认] → Phase 3 → [🟡] → Phase 4 → [🔴] → Phase 5 → [🔴 报告] → 论文
+[run_pipeline 到门禁阶段]
+  → 动作槽产出 items(待审项) + suggestions
+  → 写入 .modeling/hitl/<phase>_gate.md（人可读待审内容）
+  → phase_status.json 标记 waiting_human（信号）
+  → 返回 verdict={action:'awaiting_human', ...}
+       ↓
+[主 agent 读 roles/hitl_reviewer.md 的强约束]
+  → 检测到 waiting_human → 停下流水线 → 读出待审项
+  → 在对话中提问【confirm/edit/regenerate/skip/abort】→ 等用户回复
+       ↓
+[用户回复] → 主 agent 按动作处理 → 落盘 <phase>_feedback.json → 继续
 ```
 
-每次人介入，主线程：
-1. 把**待确认项 + agent 建议**展示给人；
-2. 人反馈（5 个动作之一，或自由文本意见）；
-3. 主线程把反馈**落盘** `.modeling/hitl/<phase>_feedback.json`（当次生效，不沉淀——本次决策：不形成回灌资产，保持精简）；
+**强提示词约束**（用户拍板）：主 agent 靠 `roles/hitl_reviewer.md` 的强指令停下（不依赖任何"等用户"原语，适配多平台）。双保险：`waiting_human` 标记（信号）+ 角色强约束（行为）。
+
+**auto 模式**：即使 `mode='auto'` 也**先注入审校提醒**（人工必审），仅当用户明确缺席/无回复时才降级 `confirm`（保住 benchmark 出分）。语义 = "先问人，人不在才降级"，而非"不问人"。
+
+每次人介入，主 agent：
+1. 读出 **待确认项 + agent 建议**；
+2. 用户反馈（5 个动作之一，或自由文本意见）；
+3. 主 agent 把反馈**落盘** `.modeling/hitl/<phase>_feedback.json`（当次生效，不沉淀回灌）；
 4. 反馈在后续阶段作为**硬约束**注入（人说了方向就按人的来）。
 
 ## 六、落盘约定
