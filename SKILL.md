@@ -125,7 +125,7 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 
 2. **论文蓝图**（`roles/paper_planner.md`，阶段 5b-1）：在写任何段落**之前**，基于已审批报告产出 `.modeling/manuscript/blueprints/paper_blueprint.md`——整篇论文的**装配图**。把"论文必须有什么"固化成结构化字段：全篇章节树 + 每问固定六项子结构（模型/求解/结果/**策略规律**/亮点/判据示意）+ 参考文献席 + 定理/命题清单 + 跨问递进承接句 + 结构自检表。**没有蓝图不进入写作**。格式见 `references/paper_structure.md`。
 
-3. **论文正文**（`roles/chapter_writer.md`，阶段 5b-2）：基于蓝图，按题目问题顺序**逐段**写论文段落（`sections/*.tex`），每段对照蓝图子结构填写，再汇总用 Tectonic 编译为 `paper.pdf`——给评委看的成品。
+3. **论文正文**（`roles/chapter_writer.md`，阶段 5b-2）：基于蓝图，按题目问题顺序**逐段**写论文段落（`sections/*.tex`），每段对照蓝图子结构填写，再汇总用 Tectonic 编译为 `paper.pdf`——给评委看的成品。**写完每段、编译前跑 `scripts/check_ai_style.py` 去 AI 味自检**（规则库 `references/no_ai_style.md`）：方括号标签/说教套话/括注堆命中即回改，句长 CV < 0.25 打散句式；去 AI 味只改措辞、**数值/单位/结论/文献不动**（红线）。
 
 4. **结构审校**（`roles/paper_structural_reviewer.md`，阶段 5b-3，🔴 门禁）：对照蓝图**逐项核对兑现度**——每问策略规律段/参考文献节/定理清单/递进承接/匿名合规是否齐全；缺一项即**回退**重写，**不得带着缺结构进入最终交付**。此环节只校验"结构全不全"，不覆盖 model_critic 的"数值对不对"（两者独立）。
 
@@ -151,6 +151,7 @@ description: 竞赛级数学建模快速流水线（精简版）。数据摸底 
 | `run_pipeline.py` | **主流程编排器**：九阶段（0-5 含 5a/b） + HITL 门禁，建 `.modeling/` 标准目录、落盘 `phase_status.json`；门禁阶段生成 `.modeling/hitl/<phase>_gate.md` 待审内容 + 标记 `waiting_human`，交主 agent（按 `roles/hitl_reviewer.md`）在对话流中问人 | `MathModelingPipeline(problem_path, workdir).run(mode='live'/'auto')` |
 | `method_retrieve.py` | HMML 检索相关建模方法 → 落盘 `00_retrieval.json`（含归属流派 school），供 subagent 消费 | `retrieve_methods(problem_desc, top_k)` / `save_to_json(results, workdir)` / `load_from_json(workdir)` |
 | `fig_helpers.py` | **论文配图统一工具库**：配色/样式/导出规范（`PALETTE`+`setup_mpl`+`style_ax`+`fig_save`），杜绝 tab:* 默认色；几何/数值图必须用求解引擎真实数据 | 配色见 `references/paper_figures.md`；`palette(name)` / `fig_save(fig, path)` |
+| `check_ai_style.py` | **论文去 AI 味自检**：扫描方括号标签/说教套话/括注堆/口语化/AI高频词 + 句长 CV 量化 + 术语一致自检（规则库 `references/no_ai_style.md`），阶段 5b-2 写作后必跑 | `python scripts/check_ai_style.py <段.tex\|目录>` / `--dt "术语1\|术语2"` |
 | `greedy_segmentation.py` | 有序特征异质性贪心切分 | `greedy_ordered_partition(...)` |
 | `lmm_variance_decomp.py` | LMM 拟合与方差分解 | `fit_lmm_with_variance_decomposition(...)` |
 | `robust_qc_3zone.py` | 非参数质控 + 三区双阈值 | `non_parametric_quality_control(...)` |
