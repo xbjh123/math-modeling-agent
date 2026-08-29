@@ -1,0 +1,33 @@
+% =====================================================================
+%  tikz_geometry_preamble.tex — 几何/机理示意图 TikZ 公共导言（被 \input 的片段）
+%  ---------------------------------------------------------------------
+%  用法：主文档里 \documentclass[border=6pt]{standalone} + \usepackage{ctex,tikz}
+%        之后 \input{tikz_geometry_preamble.tex}（本文件只含宏包/颜色/tikzset，无 documentclass）。
+%  对标 A196 图5-8 的手法：虚线=隐藏边、灰渐变=实体、红粗线=关键轮廓、
+%  标准几何符号标注点/线/圆。极简、黑白+关键色高亮，学术矢量风。
+% =====================================================================
+\usepackage{tikz}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta,calc,3d,shapes.geometric,shapes.misc,positioning,decorations.pathreplacing}
+
+% ---- A196 风格配色（极简黑白 + 关键色红/蓝点缀）----
+\definecolor{ink}{RGB}{40,40,40}        % 主墨色（非纯黑）
+\definecolor{keyred}{RGB}{200,40,40}    % 关键轮廓/重点红
+\definecolor{keyblue}{RGB}{60,110,180}  % 辅助蓝
+\definecolor{fillsolid}{RGB}{235,235,235} % 实心浅灰
+\definecolor{fillgrad}{RGB}{200,200,200}  % 渐变中灰(球体阴影)
+
+% ---- 常用样式 定义（供图内复用）----
+\tikzset{
+  hidden/.style={draw=ink, dashed, line width=0.6pt},
+  solid/.style={draw=ink, line width=0.6pt},
+  keyline/.style={draw=keyred, line width=1.4pt},
+  solidbody/.style={draw=ink, fill=fillsolid, line width=0.6pt},
+  sphere/.style={draw=ink, fill=fillsolid, line width=0.6pt},
+  proc/.style={draw=ink, rounded corners, fill=white, align=center, inner sep=5pt, font=\small},
+  decision/.style={draw=ink, diamond, aspect=1.8, align=center, inner sep=3pt, font=\small},
+  terminator/.style={draw=ink, rounded corners=10pt, fill=white, align=center, inner sep=5pt, font=\small},
+  io/.style={draw=ink, trapezium, trapezium left angle=70, trapezium right angle=110, align=center, inner sep=4pt, font=\small},
+  flow/.style={-{Stealth[length=2.6mm]}, thick, draw=ink},
+  lbl/.style={font=\small, inner sep=1pt, fill=white},
+}
