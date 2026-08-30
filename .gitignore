@@ -53,3 +53,8 @@ benchmarks/runs/**/20*/
 # TikZ 编译生成的 PDF/PNG 为产物（.tex 源码入库即可）
 templates/tikz/*.pdf
 templates/tikz/*.png
+
+# 根目录临时文档/测试记录（本地留存于各题 .modeling/）
+/SESSION_EXPORT_*.md
+/HITL_full_test_prompt_*.md
+/RCA_*.md

@@ -3,7 +3,7 @@
 定位：这是主线程的"骨架 + 门禁注入器"，**不替 subagent 干活**。
 它负责：
   1. 建立 .modeling/ 标准目录；
-  2. 按阶段顺序推进，并在每个 🔴/🟡 决策点调用 hitl_gate 等人确认；
+  2. 按阶段顺序推进，并在每个 🔴/🟡 决策点生成待审文件 + 标记 waiting_human，由主 agent 在对话流问人；
   3. 把各阶段产物/状态落盘（.modeling/ 目录 + phase_status.json）；
   4. HITL 门禁返回的人反馈作为硬约束注入后续阶段。
 
@@ -16,7 +16,7 @@
   p.run(mode="live")      # 实战模式：人等确认
   # 或 p.run(mode="auto")  # benchmark：门禁自动放行
 
-依赖：仅标准库 + hitl_gate + method_retrieve。轻量、可跑、可复用。
+依赖：仅标准库 + method_retrieve。轻量、可跑、可复用。
 """
 
 import json
