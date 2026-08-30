@@ -1,0 +1,56 @@
+% =====================================================================
+%  fig6_outline.tex — 图6：导弹视锥下圆柱体的外轮廓提取
+% ---------------------------------------------------------------------
+%  从导弹视角看，圆柱外廓 = 两段圆弧(上/下底) + 两条母线。
+%  展示"最难遮蔽部分=外轮廓"的归约思想。
+%  编译：cd templates/tikz && tectonic fig6_outline.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.15]
+  % 左侧：圆柱（灰, 可见轮廓红线）
+  \def\rr{0.7}\def\hh{1.55}
+  \coordinate (base) at (0,0);
+  % 圆柱主体（灰）
+  \draw[solidbody] ($(base)+(-\rr,0)$) -- ++(0,\hh);
+  \draw[solidbody] ($(base)+(\rr,0)$) -- ++(0,\hh);
+  \draw[hidden] ($(base)+(0,0)$) -- ++(0,\hh);
+  \draw[solidbody] ($(base)+(-\rr,0)$) arc (180:360:{\rr} and {0.28});
+  \draw[solidbody] ($(base)+(\rr,0)$) arc (0:180:{\rr} and {0.28});
+  \draw[solidbody] ($(base)+(-\rr,\hh)$) arc (180:360:{\rr} and {0.28});
+  \draw[hidden] ($(base)+(0,\hh)$) arc (0:180:{\rr} and {0.28});
+  \node[lbl, below] at (0.3,-0.35) {圆柱};
+
+  % 关键外轮廓（红色粗线：两段圆弧 + 两条母线）
+  \draw[keyline] ($(base)+(-\rr,0)$) arc (0:180:{\rr} and {0.28}); % 下底前弧
+  \draw[keyline] ($(base)+(-\rr,\hh)$) arc (0:180:{\rr} and {0.28}); % 上底前弧
+  \draw[keyline] ($(base)+(-\rr,0)$) -- ++(0,\hh);   % 左母线
+  \draw[keyline] ($(base)+(\rr,0)$) -- ++(0,\hh);    % 右母线
+
+  % 视线锥示意（导弹在左上方极远处, 用箭头表示看向轮廓）
+  \node[lbl, above left, font=\footnotesize] at (-1.7,3.0) {导弹视角};
+  \draw[keyline, ->] (-1.7,2.6) -- ($(base)+(-\rr,\hh)$);
+  \draw[keyline, ->] (-1.7,2.4) -- ($(base)+(\rr,0)$);
+
+  % ---- 右侧：提取出的外轮廓（2D, 独立展示）----
+  \begin{scope}[shift={(4.0,0.6)}, scale=1.1]
+    \node[align=center, font=\footnotesize] at (0,1.9) {归约→ 只需考察};
+    \node[align=center, font=\footnotesize] at (0,1.55) {外轮廓 = 上下底面圆周};
+    % 上底圆周（2D 椭圆）
+    \draw[keyline] (0,1.0) ellipse ({0.8} and {0.32});
+    \node[lbl, font=\footnotesize] at (1.0,1.0) {上圆周};
+    % 两条母线（从上下圆周连）
+    \draw[keyline] (-0.8,0.2) -- (-0.8,1.0);
+    \draw[keyline] (0.8,0.2) -- (0.8,1.0);
+    % 下底圆周
+    \draw[keyline] (0,0.2) ellipse ({0.8} and {0.32});
+    \node[lbl, font=\footnotesize] at (1.0,0.2) {下圆周};
+  \end{scope}
+
+  % 图注
+  \node[font=\scriptsize, lbl] at (3.2,-1.1) {图6：导弹视锥下圆柱体的外轮廓（归约的关键一层）};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,44 @@
+% =====================================================================
+%  fig5_cone_cylinder.tex — 图5：导弹视锥下观察圆柱
+% ---------------------------------------------------------------------
+%  导弹 M 发出视线锥，看向目标圆柱。展示"最难点=外轮廓"的几何直觉。
+%  编译：cd templates/tikz && tectonic fig5_cone_cylinder.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.15]
+  % 圆柱（右下）
+  \def\rr{0.75}\def\hh{1.6}
+  \coordinate (base) at (3.2,0);
+  \draw[solid] ($(base)+(-\rr,0)$) -- ++(0,\hh);
+  \draw[solid] ($(base)+(\rr,0)$) -- ++(0,\hh);
+  \draw[hidden] ($(base)+(0,0)$) -- ++(0,\hh);
+  \draw[solid] ($(base)+(-\rr,0)$) arc (180:360:{\rr} and {0.28});
+  \draw[solid] ($(base)+(\rr,0)$) arc (0:180:{\rr} and {0.28});
+  \draw[solid] ($(base)+(-\rr,\hh)$) arc (180:360:{\rr} and {0.28});
+  \draw[hidden] ($(base)+(0,\hh)$) arc (0:180:{\rr} and {0.28});
+  \node[lbl, below] at (3.6,-0.3) {真目标圆柱};
+
+  % 导弹 M（左上）
+  \coordinate (M) at (0.4,3.4);
+  \node[circle, fill=ink, inner sep=2.4pt] at (M) {};
+  \node[lbl, above left] at (M) {$M$ 导弹};
+  \node[lbl, below right, font=\footnotesize] at (M) {点光源};
+
+  % 视线锥（导弹 → 圆柱上下缘, 红色关键）
+  \draw[keyline] (M) -- ($(base)+(\rr,\hh)$);   % 到上底右缘
+  \draw[keyline] (M) -- ($(base)+(\rr,0)$);     % 到下底右缘
+  \draw[keyline] (M) -- ($(base)+(-\rr,\hh)$);  % 到上底左缘(可见侧)
+  \draw[keyline, dashed] (M) -- ($(base)+(0,\hh)$); % 到上底后缘(隐藏)
+
+  % 锥角标注
+  \node[align=center, font=\footnotesize, lbl] at (3.9,3.2)
+    {视线锥\\$\alpha$很小};
+
+  % 图注
+  \node[font=\scriptsize, lbl] at (2.6,-1.0) {图5：导弹视锥下观察圆柱（最难点=外轮廓）};
+\end{tikzpicture}
+\end{document}

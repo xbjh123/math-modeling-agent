@@ -1,0 +1,57 @@
+% =====================================================================
+%  fig7_sphere_shield.tex — 图7：圆柱被烟幕球遮蔽示意（3D）
+% ---------------------------------------------------------------------
+%  导弹看向圆柱外轮廓，烟幕球挡在中间，视线锥被球截断。
+%  球=灰渐变实体，被遮挡部分=虚线。
+%  编译：cd templates/tikz && tectonic fig7_sphere_shield.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.15]
+  % 圆柱（右下）
+  \def\rr{0.75}\def\hh{1.55}
+  \coordinate (base) at (4.2,0);
+  \draw[solidbody] ($(base)+(-\rr,0)$) -- ++(0,\hh);
+  \draw[solidbody] ($(base)+(\rr,0)$) -- ++(0,\hh);
+  \draw[hidden] ($(base)+(0,0)$) -- ++(0,\hh);
+  \draw[solidbody] ($(base)+(-\rr,0)$) arc (180:360:{\rr} and {0.28});
+  \draw[solidbody] ($(base)+(\rr,0)$) arc (0:180:{\rr} and {0.28});
+  \draw[solidbody] ($(base)+(-\rr,\hh)$) arc (180:360:{\rr} and {0.28});
+  \draw[hidden] ($(base)+(0,\hh)$) arc (0:180:{\rr} and {0.28});
+  \node[lbl, below] at (4.6,-0.3) {真目标圆柱};
+
+  % 烟幕球（中部, 灰渐变实体）
+  \coordinate (S) at (2.0,1.6);
+  \draw[sphere] (S) circle (0.8);
+  \draw[hidden] (S) ellipse ({0.8} and {0.26});
+  \node[lbl, above] at (2.0,2.7) {$S$ 烟幕球};
+
+  % 导弹 M（左上）
+  \coordinate (M) at (0.3,3.3);
+  \node[circle, fill=ink, inner sep=2.4pt] at (M) {};
+  \node[lbl, above left] at (M) {$M$ 导弹};
+
+  % 视线：M → 圆柱外轮廓（穿过球, 球后被遮挡用虚线）
+  % 到上底右缘
+  \draw[keyline] (M) -- (S);                       % 入射段(到球)
+  \draw[keyline, dashed] (S) -- ($(base)+(\rr,\hh)$); % 出射段(被球截断, 虚线)
+  % 到下底右缘
+  \draw[keyline] (M) -- (2.0,1.6-0.0) (2.0,1.6) -- ($(base)+(\rr,0)$);
+  \draw[keyline, dashed] (2.0,1.6) -- ($(base)+(\rr,0)$);
+  % 到上底左缘(可见侧)
+  \draw[keyline] (M) -- (1.72,1.18);
+  \draw[keyline, dashed] (1.72,1.18) -- ($(base)+(-\rr,\hh)$);
+
+  % 说明
+  \node[align=center, font=\footnotesize, lbl] at (3.6,3.0)
+    {球形烟幕\\截断视线锥};
+  \node[align=center, font=\footnotesize, keyred] at (1.6,-1.0)
+    {虚线 = 被球遮挡的视线\\外轮廓完全被遮 ⇒ 全遮蔽};
+
+  % 图注
+  \node[font=\scriptsize, lbl] at (2.8,-1.7) {图7：圆柱被烟幕球遮蔽（外轮廓判定）};
+\end{tikzpicture}
+\end{document}

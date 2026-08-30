@@ -1,0 +1,59 @@
+% =====================================================================
+%  fig_segment_sphere.tex — 线段与球体相交示意（复刻 A196 图4）
+% ---------------------------------------------------------------------
+%  从点 P1 到 P2 的线段穿过球心 C、半径 r 的球；旁附圆柱辅助。
+%  几何判定：点到线段距离 ≤ 球半径 或 端点入球。
+%  编译：cd templates/tikz && tectonic fig_segment_sphere.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.1]
+
+  % ---- 球体 C（灰色实心 + 立体感）----
+  \def\R{1.0}
+  \draw[sphere] (0,0) circle (\R);
+  \draw[hidden] (0,0) ellipse ({\R} and {0.32});          % 赤道纬线(立体)
+  \node[circle, fill=ink, inner sep=1.8pt] at (0,0) {};
+  \node[lbl, below left] at (0,-0.15) {$C$ (球心)};
+  \node[lbl, below] at (0,-\R-0.15) {$r$};
+  % 半径标注
+  \draw[ink, <->] (0,0) -- (0,\R) node[midway, right, lbl]{};
+  \node[lbl, right] at (0.12,\R/2) {$r$};
+
+  % ---- 线段 P1→P2 穿过球 ----
+  \coordinate (P1) at (-2.6,1.5);
+  \coordinate (P2) at (2.4,-1.2);
+  \draw[thick, keyblue] (P1) -- (P2);
+  \node[circle, fill=ink, inner sep=2.2pt, label={[lbl]above left:$P_1$}] at (P1) {};
+  \node[circle, fill=ink, inner sep=2.2pt, label={[lbl]below right:$P_2$}] at (P2) {};
+  \node[below left, lbl, font=\footnotesize] at (P1) {导弹端点};
+  \node[below right, lbl, font=\footnotesize] at (P2) {目标采样点};
+
+  % ---- 相交点标注（线段与球面交点）----
+  \node[circle, fill=keyred, inner sep=1.6pt, label={[lbl]above:$X_1$}] at (-0.92,0.62) {};
+  \node[circle, fill=keyred, inner sep=1.6pt, label={[lbl]below:$X_2$}] at (0.85,-0.66) {};
+
+  % ---- 旁附圆柱（辅助目标示意）----
+  \begin{scope}[shift={(4.2,-0.6)}, scale=0.75]
+    \def\rr{0.9}\def\hh{1.6}
+    \draw[solid] (-\rr,0) -- ++(0,\hh);
+    \draw[solid] (\rr,0) -- ++(0,\hh);
+    \draw[hidden] (0,0) -- ++(0,\hh);
+    \draw[solid] (-\rr,0) arc (180:360:{\rr} and {0.32});
+    \draw[hidden] (0,0) arc (0:180:{\rr} and {0.32});
+    \draw[solid] (-\rr,\hh) arc (180:360:{\rr} and {0.32});
+    \draw[hidden] (0,\hh) arc (0:180:{\rr} and {0.32});
+    \node[lbl, below, font=\footnotesize] at (0.3,-0.4) {目标圆柱(辅助)};
+  \end{scope}
+
+  % ---- 判定式说明 ----
+  \node[align=left, font=\footnotesize, lbl] at (0.3,2.4)
+    {判定: 视线$\overline{P_1P_2}$与球$S(C,r)$相交\\$\Leftrightarrow$ 线段到球心距离 $\le r$ 或 端点入球};
+
+  % ---- 图注 ----
+  \node[font=\scriptsize, lbl] at (0.2,-2.4) {图：线段与球体相交的几何判定（有效遮蔽判据）};
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,54 @@
+% =====================================================================
+%  fig_flow_bisection.tex — 二分法求解遮蔽时刻 算法流程图（对标 A196 图9）
+% ---------------------------------------------------------------------
+%  标准流程图：椭圆=起止, 圆角框=过程, 菱形=判断, 判断两出口明确分流。
+%  二分语义：C(m)=1 -> l=m(右半区); C(m)=0 -> r=m(左半区)。每轮缩半。
+%  编译：cd templates/tikz && tectonic fig_flow_bisection.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[node distance=1.0cm and 1.0cm, align=center, font=\footnotesize]
+
+  % ---- 左列：主流程（二分查找 t_in / t_out）----
+  \node[terminator] (start) {开始};
+  \node[proc, below=of start] (init) {给定 $[l,r]=[t_0,\,t_b+20]$\\目标: 求 $t_{in}$ 或 $t_{out}$};
+  \node[decision, below=of init] (w) {$r-l<\varepsilon$?};
+  \node[proc, below=of w] (mid) {取中点 $m=(l+r)/2$};
+  \node[decision, below=of mid] (c) {$C(m)=1$?};
+  \node[proc, below=of c, xshift=-2.4cm] (left) {$r:=m$\\去左半区};
+  \node[proc, below=of c, xshift=2.4cm] (right) {$l:=m$\\去右半区};
+  \node[terminator, right=1.2cm of w] (out) {输出 $t=t_{in}$ 或 $t_{out}$};
+
+  % 连线：主干
+  \draw[flow] (start) -- (init);
+  \draw[flow] (init) -- (w);
+  \draw[flow] (w) -- node[left, lbl]{否} (mid);
+  \draw[flow] (w) -- node[above, lbl]{是} (out);
+  \draw[flow] (mid) -- (c);
+
+  % C(m) 判断分流（是->右, 否->左），两路再汇合回宽度判断
+  \draw[flow] (c) -- node[above, lbl]{否} (left);
+  \draw[flow] (c) -- node[above, lbl]{是} (right);
+  \draw[flow] (left) -- ++(0,-0.7) -| (w.south);
+  \draw[flow] (right) -- ++(0,-0.7) -| (w.south);
+
+  % ---- 右列：二分示意图（时间轴+点+当前区间+已淘汰段）----
+  \begin{scope}[shift={(7.2,-1.2)}, scale=1.0]
+    \node[align=center, font=\footnotesize] at (1.8,2.2) {$t$ 轴上的二分逼近};
+    \draw[thick, ink, -{Stealth[length=2.4mm]}] (-0.4,0) -- (7.0,0) node[right, lbl]{$t$};
+    \foreach \p/\lab in {0.3/{$t_0$}, 1.1/{$t_b$}, 3.2/{$m$}, 4.8/{$t_{in}$}, 6.2/{$t_{out}$}} {
+      \fill[ink] (\p,0) circle (1.8pt);
+      \node[lbl, below] at (\p,-0.15) {\lab};
+    }
+    \draw[ink, thick] (3.2,0.14) -- (6.2,0.14);       % 当前区间 [m, t_out]
+    \draw[ink, dashed] (0.3,0.14) -- (3.2,0.14);       % 已淘汰的左段
+    \node[lbl, above] at (4.7,0.5) {当前区间 $[m,\,t_{out}]$};
+    \node[align=center, font=\scriptsize, lbl] at (3.4,-1.4)
+      {每轮把区间减半\\直至宽度 < $\varepsilon$};
+  \end{scope}
+
+\end{tikzpicture}
+\end{document}

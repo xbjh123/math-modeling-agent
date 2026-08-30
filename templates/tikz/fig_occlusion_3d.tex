@@ -1,0 +1,82 @@
+% =====================================================================
+%  fig_occlusion_3d.tex — 烟幕遮蔽几何示意图（对标 A196 图5-7）
+% ---------------------------------------------------------------------
+%  展示：导弹 M 看向真目标圆柱，视线锥；烟幕球 S 遮蔽视线；关键轮廓红高亮。
+%  体现"两底面圆周精确归约"：圆柱全遮蔽 ⇔ 只查上/下底面圆周即可。
+%  编译：cd templates/tikz && tectonic fig_occlusion_3d.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+
+\begin{tikzpicture}[scale=1.0]
+  % ---- 坐标系（3D 等轴测视角示意）----
+  \coordinate (O) at (0,0);
+  \draw[-{Stealth[length=2.2mm]}, ink] (O) -- (5,0) node[below, lbl]{$x$};
+  \draw[-{Stealth[length=2.2mm]}, ink] (O) -- (0,2.6) node[left, lbl]{$z$};
+  \draw[-{Stealth[length=2.2mm]}, ink] (O) -- (2.4,1.6) node[below right, lbl]{$y$};
+
+  % ---- 导弹 M（进近方向来自 -x，位于左上方）----
+  \coordinate (M) at (-1.0,2.3);
+  \node[circle, fill=ink, inner sep=2.2pt] at (M) {};
+  \node[lbl, above right] at (M) {$M$ 导弹};
+
+  % ---- 真目标圆柱（3D 线段逼近, 灰实心侧影, 虚线=隐藏边）----
+  \def\rr{1.0}
+  \def\hh{1.8}
+  % 圆柱侧面（下底→上底的两条竖直母线, 前实后虚）
+  \draw[solid] (-\rr,0) -- ++(0,\hh);
+  \draw[solid] (\rr,0) -- ++(0,\hh);
+  \draw[hidden] (0,0) -- ++(0,\hh);          % 背面母线(虚线)
+  % 下底面椭圆（前实后虚）
+  \draw[solid] (-\rr,0) arc (180:360:{\rr} and {0.35});
+  \draw[hidden] (0,0) arc (0:180:{\rr} and {0.35});
+  \draw[solid] (\rr,0) arc (0:180:{\rr} and {0.35});
+  % 上底面椭圆
+  \draw[solid] (-\rr,\hh) arc (180:360:{\rr} and {0.35});
+  \draw[hidden] (0,\hh) arc (0:180:{\rr} and {0.35});
+  \draw[solid] (\rr,\hh) arc (0:180:{\rr} and {0.35});
+  \node[below, lbl] at (0.5,-0.35) {真目标圆柱};
+  \node[lbl] at (\rr+0.32, \hh/2) {$r_t$=7m};
+
+  % ---- 关键轮廓红高亮：导弹视角的圆柱外包络（两底面圆周）----
+  \draw[keyline] (M) -- (\rr, \hh);   % 视线到底缘
+  \draw[keyline] (M) -- (\rr, 0);     % 视线到上缘
+  \draw[keyline] (-\rr,\hh) arc (0:180:{\rr} and {0.35});  % 上底面圆周(关键)
+  \draw[keyline] (\rr,\hh) arc (0:180:{\rr} and {0.35});
+  \draw[keyline] (\rr,0) arc (0:180:{\rr} and {0.35});     % 下底面圆周(关键)
+
+  % ---- 烟幕球 S（立体感: 灰球 + 高光, 位于导弹-目标连线上）----
+  \node[lbl, align=center, font=\footnotesize] at (2.2,1.9)
+    {$S$: 烟幕球 $R$=10m};
+  \begin{scope}
+    \clip (1.9,1.0) circle (0.7);
+    \fill[fillgrad] (-3.2,1.0) circle (0.75);   % 用更大圆做球体灰度背景
+    \fill[fillsolid] (1.9,1.0) circle (0.7);
+    \fill[white] (1.5,1.45) circle (0.28);       % 高光
+  \end{scope}
+  \draw[solid] (1.9,1.0) circle (0.7);
+  \draw[hidden] (1.9,1.0) ellipse ({0.7} and {0.22}); % 球上纬线(示意立体)
+  \node[lbl, below] at (1.9,0.15) {$C$(球心)};
+
+  % ---- 两底面圆周归约示意（右侧, 简洁）----
+  \begin{scope}[shift={(4.6,-0.4)}, scale=0.85]
+    \node[align=center, font=\footnotesize] at (0,1.9) {归约: 全遮蔽};
+    \node[align=center, font=\footnotesize] at (0,1.5)
+      {$\Leftrightarrow$ 上底$\cup$下底圆周};
+    \draw[keyline] (0,0.3) circle (0.55);
+    \draw[keyline] (0,-0.55) ellipse ({0.55} and {0.22});
+    \node[lbl, font=\footnotesize] at (0.8,0.4) {顶圆周};
+    \node[lbl, font=\footnotesize] at (0.8,-0.55) {底圆周};
+    \node[align=center, font=\scriptsize, lbl] at (0.4,-1.4)
+      {不需对整圆柱采样\\只查两圆周};
+  \end{scope}
+
+  % ---- 图注（放底部, 避开主体）----
+  \node[font=\scriptsize, lbl] at (2.0,-2.0)
+    {图：视线锥全遮蔽判定——圆柱由两底面圆周精确归约};
+\end{tikzpicture}
+
+\end{document}

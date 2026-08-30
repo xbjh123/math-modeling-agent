@@ -1,0 +1,52 @@
+% =====================================================================
+%  fig8_section_pab.tex — 图8：截面 PAB 几何证明
+% ---------------------------------------------------------------------
+%  证明核心：若 PA, PB 均被球 D 遮挡，则平面 PAB 与球交为圆盘，
+%  故 AB 上任一点 Q 的视线 PQ 也被遮 ⇒ 只需考察上/下底面圆周。
+%  编译：cd templates/tikz && tectonic fig8_section_pab.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.2]
+  % 点 P（导弹, 上方）
+  \coordinate (P) at (0,3.0);
+  \node[circle, fill=ink, inner sep=2.4pt] at (P) {};
+  \node[lbl, above] at (P) {$P$ (导弹)};
+
+  % 圆盘 D（球在截面上的投影, 灰色）
+  \draw[sphere] (0,1.5) circle (1.0);
+  \node[lbl, left] at (-1.15,1.5) {$D$ (球截面)};
+
+  % 点 A（上底圆周点, 右下方）
+  \coordinate (A) at (1.7,0.3);
+  % 点 B（下底圆周点, 左下方）
+  \coordinate (B) at (-1.7,0.3);
+  \node[circle, fill=ink, inner sep=2.2pt, label={[lbl]below:$A$}] at (A) {};
+  \node[circle, fill=ink, inner sep=2.2pt, label={[lbl]below:$B$}] at (B) {};
+  % AB 线段上任意点 Q
+  \coordinate (Q) at (0,0.3);
+  \node[circle, fill=keyred, inner sep=2.2pt, label={[lbl]below:$Q$}] at (Q) {};
+
+  % 切线 PA、PB（与圆 D 相切）
+  \draw[keyline] (P) -- (A);
+  \draw[keyline] (P) -- (B);
+  % 切点 XA、XB（加深颜色, 醒目）
+  \node[circle, fill=keyblue, inner sep=2.4pt, label={[lbl]above left:$X_A$}] at (0.66,2.05) {};
+  \node[circle, fill=keyblue, inner sep=2.4pt, label={[lbl]above right:$X_B$}] at (-0.66,2.05) {};
+  % AB 线段 + 核心弦 X_A X_B（红色高亮强调）
+  \draw[solid] (B) -- (A);
+  \draw[keyline] (0.66,2.05) -- (-0.66,2.05);   % 弦 X_A X_B, 关键过渡元素
+  % 视线 PQ（虚线, 证明也被遮）
+  \draw[blue, dashed, thick] (P) -- (Q);
+
+  % 说明文字
+  \node[align=center, font=\footnotesize, lbl] at (2.4,3.2)
+    {若 $PA$、$PB$ 被球遮\\则 $PQ$ 亦被遮\\($\because$ 圆盘凸, $X_AX_B\subset D$)};
+
+  % 图注
+  \node[font=\scriptsize, lbl] at (0.2,-1.0) {图8：截面 $PAB$ 证明——只需查上/下底面圆周};
+\end{tikzpicture}
+\end{document}

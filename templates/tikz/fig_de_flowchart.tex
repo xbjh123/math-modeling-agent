@@ -1,0 +1,46 @@
+% =====================================================================
+%  fig_de_flowchart.tex — 差分进化算法流程图（复刻 A196 图11）
+% ---------------------------------------------------------------------
+%  标准流程图：初始化种群 → 迭代判断 → 变异 → 交叉 → 选择 →
+%  保留精英 → 新种群 → 循环 → 输出最优个体。
+%  编译：cd templates/tikz && tectonic fig_de_flowchart.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[node distance=0.85cm and 1.2cm, align=center, font=\footnotesize]
+
+  % ---- 主流程 ----
+  \node[terminator] (start) {开始};
+  \node[proc, below=of start] (init) {初始化种群 $N=100$\\变异 $F=0.3$, 交叉 $CR=0.9$};
+  \node[decision, below=of init] (iter) {达到最大迭代\\次数 $G_{max}$?};
+  \node[proc, below=of iter] (mut) {变异操作\\ $V_i=X_{r1}+F(X_{r2}-X_{r3})$};
+  \node[proc, below=of mut] (cx) {交叉操作\\ 二项式交叉生成试验向量 $U_i$};
+  \node[proc, below=of cx] (sel) {选择操作\\ 择优保留 ($f(U_i)>f(X_i)$ 则替换)};
+  \node[proc, below=of sel] (elite) {保留部分精英};
+  \node[proc, below=of elite] (newpop) {生成新种群};
+  \node[terminator, right=1.6cm of iter] (out) {输出最优个体\\ $X_{best}$ 与 $f(X_{best})$};
+
+  % ---- 连线（判断两出口）----
+  \draw[flow] (start) -- (init);
+  \draw[flow] (init) -- (iter);
+  \draw[flow] (iter) -- node[left, lbl]{否} (mut);
+  \draw[flow] (iter) -- node[above, lbl]{是} (out);
+  \draw[flow] (mut) -- (cx);
+  \draw[flow] (cx) -- (sel);
+  \draw[flow] (sel) -- (elite);
+  \draw[flow] (elite) -- (newpop);
+  \draw[flow] (newpop) -- ++(0,-0.5) -| (iter);   % 循环回迭代判断
+
+  % ---- 右侧参数/说明 ----
+  \begin{scope}[shift={(6.0,-1.2)}]
+    \node[align=left, font=\scriptsize, lbl]
+      {种群 $N=100$\\迭代 $G_{max}=500$\\变异因子 $F=0.3$\\交叉概率 $CR=0.9$\\约束: 惩罚函数法};
+  \end{scope}
+
+  % ---- 图注 ----
+  \node[font=\scriptsize, lbl] at (1.6,-8.6) {图：差分进化算法流程（问题三求解）};
+\end{tikzpicture}
+\end{document}

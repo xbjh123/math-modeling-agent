@@ -1,0 +1,60 @@
+% =====================================================================
+%  fig_relations.tex — 各问题关系图（复刻 A196 图2）
+% ---------------------------------------------------------------------
+%  彩色框图：单机单弹 →(参数优化)→ 时空优化(单机多弹/多机单弹)
+%                    →(递进组合)→ 多机多弹(全局优化)。
+%  编译：cd templates/tikz && tectonic fig_relations.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+% 问题关系图专用配色（彩色，非纯黑白——复刻原图）
+\definecolor{cgreen}{RGB}{200,230,200}
+\definecolor{cblue}{RGB}{200,220,245}
+\definecolor{cpink}{RGB}{250,215,220}
+\definecolor{cpurple}{RGB}{225,215,245}
+\definecolor{corange}{RGB}{250,225,200}
+
+\begin{document}
+\begin{tikzpicture}[
+  node distance=0.9cm and 1.4cm, align=center,
+  bigbox/.style={draw=ink, thick, rounded corners=4pt, inner sep=10pt, fill=#1},
+  inner/.style={draw=ink, rounded corners=2pt, inner sep=5pt, font=\small, fill=white, minimum width=3.2cm},
+  title/.style={font=\small\bfseries, align=center},
+]
+
+  % ---- 左：单机单弹 ----
+  \node[bigbox=cgreen, minimum height=4.6cm] (q12) [label={[title]above:单机单弹}] {
+    \begin{tikzpicture}
+      \node[inner] (a) {固定参数求解\\[1pt]基础模型·遮挡分析};
+      \node[inner, below=0.5cm of a] (b) {参数优化\\[1pt]飞行轨迹·单弹投掷起爆};
+    \end{tikzpicture}
+  };
+
+  % ---- 中：时空优化（单机多弹 / 多机单弹）----
+  \node[bigbox=cblue, right=1.6cm of q12, minimum height=4.6cm] (mid) [label={[title]above:时空优化}] {
+    \begin{tikzpicture}
+      \node[inner] (m1) {多机单弹\\[1pt]空间协同·多机任务分配};
+      \node[inner, below=0.5cm of m1] (m2) {单机多弹\\[1pt]时间协同·接力有效遮挡};
+    \end{tikzpicture}
+  };
+
+  % ---- 右：多机多弹 ----
+  \node[bigbox=cpink, right=1.6cm of mid, minimum height=4.6cm] (q345) [label={[title]above:多机多弹}] {
+    \begin{tikzpicture}
+      \node[inner] (mm) {全局优化\\[1pt]任务分配·资源调度};
+    \end{tikzpicture}
+  };
+
+  % ---- 箭头（递进关系）----
+  \draw[flow, thick] (q12.east) -- node[above, lbl]{参数优化} (mid.west);
+  \draw[flow, thick] (mid.east) -- node[above, lbl]{多弹/多机} (q345.west);
+  % 单机多弹/多机单弹 各自指向 多机多弹
+  \draw[flow, thick, dashed] (m2.east) -- node[below, lbl]{叠加} (q345.west);
+
+  % ---- 底部图注 ----
+  \node[font=\footnotesize, lbl] at (0,-3.6) {图：各问题关系（由简到繁、逐层递进组合）};
+
+\end{tikzpicture}
+\end{document}

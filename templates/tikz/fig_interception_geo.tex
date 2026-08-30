@@ -1,0 +1,58 @@
+% =====================================================================
+%  fig_interception_geo.tex — 拦截几何关系示意（复刻 A196 p27 无号图）
+% ---------------------------------------------------------------------
+%  导弹进近、真目标、烟幕云团、假目标(原点) 的空间几何关系。
+%  编译：cd templates/tikz && tectonic fig_interception_geo.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[scale=1.15]
+
+  % ---- 坐标轴 ----
+  \draw[-{Stealth[length=2.2mm]}, ink] (-0.5,0) -- (7.5,0) node[below, lbl]{$x$};
+  \draw[-{Stealth[length=2.2mm]}, ink] (0,-0.5) -- (0,4.6) node[left, lbl]{$z$};
+
+  % ---- 真目标（圆柱, 右侧）----
+  \def\rr{0.55}\def\hh{1.3}
+  \draw[solid] (5.2,0.4) -- ++(0,\hh);
+  \draw[solid] (5.2+\rr*2,0.4) -- ++(0,\hh);
+  \draw[hidden] (5.2+\rr,0.4) -- ++(0,\hh);
+  \draw[solid] (5.2,0.4) arc (180:360:{\rr} and {0.2});
+  \draw[solid] (5.2,\hh+0.4) arc (180:360:{\rr} and {0.2});
+  \node[align=center, lbl, below] at (5.8,0.1) {真目标\\圆柱};
+  \node[lbl] at (6.6,0.9) {$r_t$=7m};
+
+  % ---- 假目标（原点）----
+  \node[fill=ink, inner sep=2.2pt, label={[lbl]below right:原点}] at (0,0) {};
+  \node[lbl, right] at (0.35,0) {假目标};
+
+  % ---- 导弹（进近, 来自左上）----
+  \coordinate (M) at (1.2,4.2);
+  \node[circle, fill=ink, inner sep=2.4pt] at (M) {};
+  \node[lbl, above left] at (M) {$M$ 导弹};
+  % 导弹轨迹（指向原点）
+  \draw[thick, keyred, ->] (M) -- (0.15,0.15);
+
+  % ---- 烟幕云团（在弹道上, 遮蔽视线）----
+  \draw[sphere] (3.2,1.9) circle (0.85);
+  \node[lbl, above] at (3.2,2.95) {烟幕云团 $S$};
+
+  % ---- 关键视线：导弹→真目标（被云团遮蔽）----
+  \draw[thick, keyblue] (M) -- (5.5,0.4);   % 导弹到真目标底缘
+  \draw[thick, keyblue, dashed] (M) -- (5.2,1.7); % 到顶缘
+
+  % ---- 拦截点示意（偏离云团边界, 避免遮挡）----
+  \node[circle, fill=keyred, inner sep=2pt] at (2.6,2.7) {};
+  \node[lbl, below left, font=\footnotesize] at (2.6,2.7) {拦截点};
+
+  % ---- 遮挡说明（放到右上空白处）----
+  \node[align=center, font=\footnotesize, lbl] at (4.5,3.9)
+    {视线被云团遮挡\\→ 导弹无法发现真目标};
+
+  % ---- 图注 ----
+  \node[font=\scriptsize, lbl] at (3.6,-0.6) {图：导弹-真目标-烟幕云团-原点的拦截几何关系};
+\end{tikzpicture}
+\end{document}

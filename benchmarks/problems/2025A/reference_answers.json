@@ -1,0 +1,55 @@
+{
+  "problem_id": "2025A",
+  "source": "2025年高教社杯优秀论文 A196《多情形下无人机烟幕遮蔽策略的建模与优化研究》单源 + 本仓库 AI 引擎独立复算交叉背书 (见 runs/2025A/20260828_m2_first_run/human_comparison.md)",
+  "extracted_date": "2026-08-29",
+  "confidence_note": "单篇人工样本(非多篇共识); Q1 为双实现精确一致(高置信), Q2 经我方引擎复算证实(高置信), Q3/Q4/Q5 标注来源口径与可信度; 判据口径均为全遮蔽(a), g=9.8",
+  "answers": {
+    "q1_fixed_shielding_s": {
+      "consensus": 1.391643,
+      "per_source": {"A196": 1.391643, "AI_engine_dense": 1.39164, "AI_engine_sampled_264pt": 1.391719},
+      "criterion": "全遮蔽(a): 导弹到圆柱全部表面视线段均被云球截断; A196 用两底面圆周精确归约+二分, n>=300 六位收敛",
+      "note": "双实现一致到 5-6 位有效数字; 264 点采样值 1.391719 为保守上界(命题2), 差 7.6e-5",
+      "tolerance": 0.0005
+    },
+    "q2_best_shielding_s": {
+      "consensus": 4.5884,
+      "per_source": {"A196": 4.5873, "AI_recompute_of_A196": 4.588, "AI_local_refine": 4.5884, "AI_first_run_suboptimal": 4.5048},
+      "strategy": {"theta_deg": 5.168, "v_mps": 136.3663, "t_d_s": 0.8977, "t_f_s": 0.0497, "detonation": [17928.6682, 11.6375, 1799.9879]},
+      "criterion": "全遮蔽(a); 最优盆地在近载机即时起爆边界区(x_c≈17929, t_f→0.05), 非 z_line≈x_c/10 走廊中段",
+      "note": "AI 首跑 4.5048 为另一盆地局部最优(定向种子域缺口, 差 1.8%); reference 取边界盆地局部极大 4.5884",
+      "tolerance": 0.05
+    },
+    "q3_three_bombs_s": {
+      "consensus": 6.93586,
+      "range": [6.4342, 6.93586],
+      "per_source": {"A196": 6.93586, "AI_engine": 6.4342},
+      "criterion": "全遮蔽(a), 三弹并集; 同机共享(theta,v)",
+      "note": "A196 解可信度低: 第三弹零贡献(其正文自认)+表5内部不自洽, 实为两弹解且依赖 t_f=0 即时起爆; AI 解三弹全部有效。真最优预计在 [6.43, 6.94+] 区间, 待边界扩展域重跑",
+      "tolerance": 0.6
+    },
+    "q4_three_uavs_s": {
+      "consensus": 11.64526,
+      "range": [11.125936, 11.64526],
+      "per_source": {"A196_heuristic": 11.125936, "A196_DE_verify": 11.64526, "AI_engine": 11.5798},
+      "criterion": "全遮蔽(a), 三机并集",
+      "note": "AI 值落在 A196 双算法区间内; consensus 取其 DE 验证值(已知最高), 容差覆盖区间",
+      "tolerance": 0.6
+    },
+    "q5_sum_shielding_s": {
+      "consensus": 21.1573,
+      "range": [21.077, 21.1573],
+      "per_source": {"A196": 21.077, "AI_engine": 21.1573},
+      "criterion": "全遮蔽(a); 逐导弹遮蔽并集之和(Sigma口径); 每机共享(theta,v)",
+      "note": "两独立求解在 0.08 s 内一致, 结构同构; AI 略高",
+      "tolerance": 0.5
+    }
+  },
+  "ai_baseline_answers": {
+    "q1_fixed_shielding_s": 1.3917,
+    "q2_best_shielding_s": 4.5048,
+    "q3_three_bombs_s": 6.4342,
+    "q4_three_uavs_s": 11.5798,
+    "q5_sum_shielding_s": 21.1573,
+    "verdict": "Q1 精确吻合; Q2 -1.8%(种子域缺口, 已定位可修); Q3 可信但可能未达边界上限; Q4 在参照区间内; Q5 略优于 A196 — 无答案性错误"
+  }
+}

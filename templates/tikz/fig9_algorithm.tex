@@ -1,0 +1,50 @@
+% =====================================================================
+%  fig9_algorithm.tex — 图9：问题一算法总体流程图（多起点变步长搜索）
+% ---------------------------------------------------------------------
+%  完整算法：全局采样生成 N 个起点 → 逐点变步长坐标搜索 → 取最优。
+%  用标准符号：椭圆=起止, 平行四边形=输入/输出, 圆角矩=过程, 菱形=判断。
+%  编译：cd templates/tikz && tectonic fig9_algorithm.tex
+% =====================================================================
+\documentclass[border=8pt]{standalone}
+\usepackage{ctex}
+\input{tikz_geometry_preamble.tex}
+
+\begin{document}
+\begin{tikzpicture}[node distance=0.85cm and 1.3cm, align=center, font=\footnotesize]
+
+  % ---- 主流程 ----
+  \node[terminator] (start) {开始};
+  \node[io, below=of start] (input) {输入: 决策变量域、收敛精度 $\varepsilon$};
+  \node[proc, below=of input] (init) {全局随机采样\\生成 $N$ 个初始点 $X^{(i)}$};
+  \node[proc, below=of init] (point) {取一个起点 $X^{(i)}$};
+  \node[proc, below=of point] (coord) {变步长坐标搜索\\依次遍历 4 维, 逐步长 $\Delta_j/2^k$};
+  \node[decision, below=of coord] (improve) {本轮是否\\找到更优 $X_{best}$?};
+  \node[proc, below=of improve] (decay) {步长衰减 $k \leftarrow k+1$};
+  \node[decision, below=of decay] (kmax) {$k > k_{max}$?};
+  \node[proc, below=of kmax] (nextpt) {记录该起点\\局部最优 $X^{*(i)}$};
+  \node[decision, below=of nextpt] (allpt) {$N$ 个起点\\都搜完?};
+  \node[proc, below=of allpt] (best) {比较 $N$ 个局部最优\\取最大 = 全局最优};
+  \node[io, below=of best] (output) {输出: $X_{best}$, $f(X_{best})$};
+  \node[terminator, below=of output] (end) {结束};
+
+  % ---- 连线（判断均两出口）----
+  \draw[flow] (start) -- (input);
+  \draw[flow] (input) -- (init);
+  \draw[flow] (init) -- (point);
+  \draw[flow] (point) -- (coord);
+  \draw[flow] (coord) -- (improve);
+  \draw[flow] (improve) -- node[left, lbl]{否} (decay);
+  \draw[flow] (improve.east) -- ++(2.2,0) node[above, lbl]{是(保留更优)} |- (coord.east); % 保持该起点继续
+  \draw[flow] (decay) -- (kmax);
+  \draw[flow] (kmax) -- node[left, lbl]{是} (nextpt);
+  \draw[flow] (kmax.east) -- ++(1.8,0) node[above, lbl]{否(继续搜)} |- (coord.east);
+  \draw[flow] (nextpt) -- (allpt);
+  \draw[flow] (allpt) -- node[left, lbl]{是} (best);
+  \draw[flow] (allpt.east) -- ++(1.6,0) node[above, lbl]{否(换下一点)} |- (point.east);
+  \draw[flow] (best) -- (output);
+  \draw[flow] (output) -- (end);
+
+  % ---- 图注 ----
+  \node[font=\scriptsize, lbl] at (2.4,-14.6) {图9：问题一算法总体流程图（多起点变步长搜索）};
+\end{tikzpicture}
+\end{document}
